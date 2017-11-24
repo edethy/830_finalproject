@@ -1,0 +1,20 @@
+[
+	{
+		"blacklist": false,
+		"id": 2,
+		"since": "Sun Nov 19 2017 04:47:18 GMT-0500 (EST)crn0e",
+		"tabIndex": 0,
+		"time": 5,
+		"title": "www.facebook.com/",
+		"windowID": 1
+	},
+	{
+		"blacklist": false,
+		"id": 367,
+		"since": "Sun Nov 19 2017 04:49:18 GMT-0500 (EST)uyqce",
+		"tabIndex": 3,
+		"time": 21,
+		"title": "www.youtube.com/",
+		"windowID": 1
+	}
+]
