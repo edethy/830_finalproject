@@ -1,5 +1,6 @@
 package simpledb;
 import java.util.HashMap;
+import java.io.*;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -48,7 +49,7 @@ public class test {
                 try {
                     // This object can interpret strings representing dates in the format MM/dd/yyyy
                     DateFormat df = new SimpleDateFormat("EEE MMM dd yyyy hh:mm:ss"); 
-                    DateFormat df2 = new SimpleDateFormat("yyyyMMddhhmmss"); 
+                    DateFormat df2 = new SimpleDateFormat("MMddhhmmss"); 
                             
                            // Convert from String to Date
                            Date startDate = df.parse(since);
@@ -93,6 +94,25 @@ public class test {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
+
+        // construct table for node & edge
+        Type nodeTypes[] = new Type[]{ Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.STRING_TYPE, Type.INT_TYPE };
+        Type edgeTypes[] = new Type[]{ Type.INT_TYPE, Type.INT_TYPE};
+        
+        String nodeFieldNames[] = new String[]{ "id", "since", "tabIndex", "time", "title", "windowID" };
+        String edgeFieldNames[] = new String[]{ "src", "dst"};
+
+        TupleDesc td1 = new TupleDesc(nodeTypes, nodeFieldNames);
+        TupleDesc td2 = new TupleDesc(edgeTypes, edgeFieldNames);
+
+        // create the tables, associate them with the data files3
+        // and tell the catalog about the schema  the tables.
+        HeapFile table1 = new HeapFile(new File("tt.dat"), td1);
+        Database.getCatalog().addTable(table1, "t1");
+
+        HeapFile table2 = new HeapFile(new File("edge.dat"), td2);
+        Database.getCatalog().addTable(table2, "t2");
     }
 
 }
