@@ -1,4 +1,5 @@
 package simpledb;
+import java.util.HashMap;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,20 +15,19 @@ import java.text.*;
 public class test {
 
     public static void main(String[] argv) {
-        try {
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-                    
-
         JSONParser parser = new JSONParser();
         try {   
             
 
             JSONArray a = (JSONArray) parser.parse(new FileReader("g1.json"));
-            PrintWriter writer = new PrintWriter("tt.txt", "UTF-8");
+            PrintWriter nodeTableWriter = new PrintWriter("tt.txt", "UTF-8");
+            PrintWriter edgeTableWriter = new PrintWriter("edge.txt", "UTF-8");
+
+            // To check wheter the node is already added to table
+            HashMap<Long, Boolean> checkAdded = new HashMap<>();
+            Long prevID = 0L,
+                prevSince = 0L;
+            Boolean first = true;
 
             for (Object o : a)
             {
@@ -38,6 +38,7 @@ public class test {
                 since = since.split(" GMT")[0];
                 Long tabIndex = (Long) person.get("tabIndex");
                 Long time = (Long) person.get("time");
+                time = time * 60; // in sec
                 String title = (String) person.get("title");
                 Long windowID = (Long) person.get("windowID");
 
@@ -47,8 +48,7 @@ public class test {
                 try {
                     // This object can interpret strings representing dates in the format MM/dd/yyyy
                     DateFormat df = new SimpleDateFormat("EEE MMM dd yyyy hh:mm:ss"); 
-                
-                            DateFormat df2 = new SimpleDateFormat("yyyyMMddhhmmss"); 
+                    DateFormat df2 = new SimpleDateFormat("yyyyMMddhhmmss"); 
                             
                            // Convert from String to Date
                            Date startDate = df.parse(since);
@@ -60,13 +60,31 @@ public class test {
                     e.printStackTrace();
                 }
                 
-                writer.println(id + ", " + sinceNumber +  ", " + tabIndex + ", " + time + ", " + title + ", " + windowID);
+                if(!first) {
+                    Long threshold = 500L;   // in minute
+                    // Add an edge only there are too much time gap bw the current tab and the prev tab
+                    if( prevSince + time + threshold >= sinceNumber && prevID != id)
+                        edgeTableWriter.println(prevID + ", " + id);  
+                }
+                
+                first = false;
+
+                prevID = id;
+                prevSince = sinceNumber;
+
+                // If this node is already added, do not add node again
+                if( !checkAdded.containsKey(id) ) {
+                    checkAdded.put(id, true);
+                    
+                    nodeTableWriter.println(id + ", " + sinceNumber +  ", " + tabIndex + ", " + time + ", " + title + ", " + windowID);              
+                }
                 
                 // System.out.println(name);
                 
             }
 
-            writer.close();
+            nodeTableWriter.close();
+            edgeTableWriter.close();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
