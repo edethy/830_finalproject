@@ -272,23 +272,6 @@ public class JoinOptimizer {
     	return bitset_els;
     }
     
-    ///For debugging, print out 0s and 1s as they actually occur in the array.
-    ///Note: Won't print any 0s that aren't succeeded by a 1
-//    private String bsToString(BitSet b) {
-//    	if(b.length() == 0) {
-//    		return "Empty";
-//    	}
-//    	StringBuilder sb = new StringBuilder(b.length());
-//    	for (int i=0; i<b.length(); i++) {
-//    		if (b.get(i) == false) {
-//    			sb.append("0");
-//    		} else {
-//    			sb.append("1");
-//    		}
-//    	}
-//    	return sb.toString();
-//    }
-    
     /**
      * More performant way of getting subsets. Get all subsets as a set of bitset,
      * use those bitset objects to get objects of type T that should be in subset
@@ -352,6 +335,9 @@ public class JoinOptimizer {
     		printJoins(opt_plan, pc, stats, filterSelectivities);
     	}
     	System.out.println("Optimal Join Ordering: " + opt_plan);
+    	if (opt_plan == null) {
+    		return new Vector<LogicalJoinNode>();
+    	}
     	return opt_plan;
     }
     
