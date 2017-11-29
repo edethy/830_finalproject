@@ -76,7 +76,7 @@ public class test {
                 // If this node is already added, do not add node again
                 if( !checkAdded.containsKey(id) ) {
                     checkAdded.put(id, true);
-                    title = '"'+ title + '"';
+                    title = '"'+ title.split(",")[0] + '"';
                     nodeTableWriter.println(id + ", " + sinceNumber +  ", " + tabIndex + ", " + time + ", " + title + ", " + windowID);              
                 }
                 

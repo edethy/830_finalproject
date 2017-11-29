@@ -52,7 +52,7 @@
 606, 1119071620, 10, 1020, "www.youtube.com/watch", 1
 614, 1119071711, 9, 180, "www.google.com/url", 1
 618, 1119071719, 9, 4680, "www.google.com/url", 1
-622, 1119074528, 12, 1020, "www.google.com/maps/place/H+Mart/@42.3650307,-71.1113584,15z/data=!4m5!3m4!1s0x89e37753fa6eabed:0x94a2d0389a185792!8m2!3d42.3650307!4d-71.1026037", 1
+622, 1119074528, 12, 1020, "www.google.com/maps/place/H+Mart/@42.3650307", 1
 626, 1119074548, 13, 1500, "www.facebook.com/", 1
 631, 1119075516, 12, 840, "hangouts.google.com/call/xSBeYsu7Uy8q4I8hGuqEAAEE", 1
 635, 1119075716, 13, 180, "hangouts.google.com/call/CONVERSATION/Ugy9ryVpJNszwctrX6B4AaABAQ", 1
