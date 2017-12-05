@@ -1,15 +1,8 @@
-simple-db
+How to generate a graph from SNAP.json
 =========
 
-Code for all 6.830 labs will be available in this repo. Once you have set up your class repo, you pull lab code from here.
-
-Directions for Repo Setup
--------------------------
-
-Directions can be [here](https://github.com/MIT-DB-Class/course-info-2017)
-
-Lab Submission
------
-
-Instructions for labs (including how to submit answers) are [here](https://github.com/MIT-DB-Class/course-info-2017)
-
+ant <br />
+java -classpath dist/simpledb.jar simpledb.test <br />
+java -jar dist/simpledb.jar convert [NAME_OF_NODE_TXT_FILE.txt] 6 "int,int,int,int,string,int" <br />
+java -jar dist/simpledb.jar convert [NAME_OF_EDGE_TXT_FILE.txt] 2 "int,int" <br />
+java -classpath dist/simpledb.jar simpledb.GraphTable <br />
