@@ -1,0 +1,177 @@
+package simpledb;
+
+import java.util.*;
+
+/**
+ * The Join operator implements the relational join operation.
+ */
+public class DFSJoin extends Operator {
+
+	private Field start_node_value;
+
+    private int start_node_field = 0;
+    private int target_node_field_index = 1;
+
+    private int node_pk_field;
+    
+    private int target_node_field;
+    private Field target_node_field_value;
+
+    private int target_node_join_field;
+    
+    private Predicate.Op target_node_op;
+
+	private OpIterator edges;
+    private OpIterator nodes;
+	
+	private HashSet<Field> nodes_visited;
+		
+    private static final long serialVersionUID = 1L;
+
+    public DFSJoin(OpIterator nodes, OpIterator edges, Field start_node_value, 
+    int node_pk_field, Predicate.Op target_node_op, Field target_node_field_value, int target_node_field, int target_node_join_field) {
+        this.nodes = nodes;
+        this.edges = edges;
+        this.start_node_value = start_node_value;
+        nodes_visited = new HashSet<Field>();
+        this.node_pk_field = node_pk_field;
+
+        this.target_node_op = target_node_op;
+        this.target_node_field = target_node_field;
+        this.target_node_field_value = target_node_field_value;
+        this.target_node_join_field = target_node_join_field;
+    }
+
+    public HashSet<ArrayList<Field>> getPaths() {
+    	try {
+        	return getPaths(this.start_node_value, new ArrayList<Field>(), this.edges, this.nodes);	
+    	} catch(DbException e) {
+    		e.printStackTrace();
+    	} catch (TransactionAbortedException e) {
+    		e.printStackTrace();
+    	}
+    	return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private HashSet<ArrayList<Field>> getPaths(Field s_node, ArrayList<Field> path_so_far, OpIterator edges, OpIterator nodes) 
+    throws DbException, TransactionAbortedException {
+        System.out.println("Getting Paths");
+    	HashSet<ArrayList<Field>> paths_from_node = new HashSet<ArrayList<Field>>();
+    	path_so_far.add(s_node);
+    	nodes_visited.add(s_node);
+    	Predicate p = new Predicate(this.start_node_field, Predicate.Op.EQUALS, s_node);
+    	Filter edges_to_follow = new Filter(p, edges);
+
+    	edges_to_follow.open();
+    	System.out.println("Edges to follow" + edges_to_follow);
+        
+    	while(edges_to_follow.hasNext()) {
+    		ArrayList<Field> path = (ArrayList<Field>)path_so_far.clone();
+    		Tuple next_edge = edges_to_follow.next();
+    		System.out.println("Next Edge " + next_edge);
+
+            System.out.println("Target node join field " + target_node_join_field);
+    		Field next_node_id_field = next_edge.getField(target_node_join_field);
+            System.out.println("Next node id field " + next_node_id_field);
+            Predicate p2 = new Predicate(node_pk_field, Predicate.Op.EQUALS, next_node_id_field);
+            Filter get_next_node_iterator = new Filter(p2, nodes);
+            get_next_node_iterator.open();
+            boolean end_node_reached = false;
+            while (get_next_node_iterator.hasNext()) {
+                Tuple next_node = get_next_node_iterator.next();
+                System.out.println("Next Node " + next_node);
+                Field filter_field = next_node.getField(this.target_node_field);
+                end_node_reached = filter_field.compare(this.target_node_op, this.target_node_field_value);
+
+            }
+            System.out.println("End Node Reached "  + end_node_reached);
+            if (end_node_reached) {
+                path.add(next_node_id_field);
+                paths_from_node.add(path);
+            } else if (nodes_visited.contains(next_node_id_field)) {
+                System.out.println("Next Node Id Field " + next_node_id_field + " Nodes visited " + nodes_visited);
+                continue;
+            } else {
+                HashSet<ArrayList<Field>> subpaths = getPaths(next_node_id_field, path, edges, nodes);
+    			paths_from_node.addAll(subpaths);
+            }
+    	}
+        // System.out.println("Paths from node: " + paths_from_node);
+    	return paths_from_node;    	
+    }
+
+    /**
+     * @return
+     *       the field name of join field1. Should be quantified by
+     *       alias or table name.
+     * */
+    public String getJoinField1Name() {
+    	return "";
+    }
+
+    /**
+     * @return
+     *       the field name of join field2. Should be quantified by
+     *       alias or table name.
+     * */
+    public String getJoinField2Name() {
+    	return "";
+    }
+
+    /**
+     * @see simpledb.TupleDesc#merge(TupleDesc, TupleDesc) for possible
+     *      implementation logic.
+     */
+    public TupleDesc getTupleDesc() {
+    	return edges.getTupleDesc();
+    }
+
+    public void open() throws DbException, NoSuchElementException,
+            TransactionAbortedException {
+    	super.open();
+    }
+
+    public void close() {
+    	super.close();
+    }
+
+    public void rewind() throws DbException, TransactionAbortedException {
+    	close();
+    	open();
+    }
+
+    /**
+     * Returns the next tuple generated by the join, or null if there are no
+     * more tuples. Logically, this is the next tuple in r1 cross r2 that
+     * satisfies the join predicate. There are many possible implementations;
+     * the simplest is a nested loops join.
+     * <p>
+     * Note that the tuples returned from this particular implementation of Join
+     * are simply the concatenation of joining tuples from the left and right
+     * relation. Therefore, if an equality predicate is used there will be two
+     * copies of the join attribute in the results. (Removing such duplicate
+     * columns can be done with an additional projection operator if needed.)
+     * <p>
+     * For example, if one tuple is {1,2,3} and the other tuple is {1,5,6},
+     * joined on equality of the first column, then this returns {1,2,3,1,5,6}.
+     * 
+     * @return The next matching tuple.
+     * @see JoinPredicate#filter
+     */
+    protected Tuple fetchNext() throws TransactionAbortedException, DbException {
+    	return null;
+    }
+
+    @Override
+    public OpIterator[] getChildren() {
+    	return null;
+    }
+
+    @Override
+    public void setChildren(OpIterator[] children) {
+    	
+    }
+    
+
+}

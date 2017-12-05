@@ -84,21 +84,10 @@ public class BufferPool {
 	public Page getPage(TransactionId tid, PageId pid, Permissions perm)
 			throws TransactionAbortedException, DbException {
     	long start_time = System.currentTimeMillis();
-		Random randomGenerator = new Random();
-    	
-//    	while(!lm.getLock(tid, pid, perm)) {
-//    		int randomInt = randomGenerator.nextInt(20) + 5;
-//    		if (System.currentTimeMillis() > end_time) {
-//        		System.out.println("Aborting Transaction: " + tid + " Attempting to acquire page: " + pid+ " With perm" +perm);
-//    			throw new TransactionAbortedException();
-//    		}
-//    		try {
-//    			Thread.sleep(randomInt);
-//    		} catch (Exception e) {
-//    		}
-//    	}
-    	boolean acquired_lock = lm.getLock(tid,  pid,  perm);
-    //	boolean acquired_lock = true;    	
+		Random randomGenerator = new Random();    	
+
+    //	boolean acquired_lock = lm.getLock(tid,  pid,  perm);
+		boolean acquired_lock = true;
 		if(!acquired_lock) {
 			throw new TransactionAbortedException();
 		}
@@ -203,6 +192,7 @@ public class BufferPool {
 	 */
 	public void insertTuple(TransactionId tid, int tableId, Tuple t)
 			throws DbException, IOException, TransactionAbortedException {
+		System.out.println("Inserting tuple in BufferPool");
 		HeapFile f = (HeapFile) Database.getCatalog().getDatabaseFile(tableId);
 		ArrayList<Page> dirty_pages = f.insertTuple(tid, t);
 		for (int i = 0; i < dirty_pages.size(); i++) {
