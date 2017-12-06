@@ -28,6 +28,10 @@ public class DFSJoin extends Operator {
 		
     private static final long serialVersionUID = 1L;
 
+    private TupleDesc td;
+    private ArrayList<Tuple> tuple_path_list = new ArrayList<Tuple>();
+    private Iterator<Tuple> tuple_iterator;
+
     public DFSJoin(OpIterator nodes, OpIterator edges, Field start_node_value, 
     int node_pk_field, Predicate.Op target_node_op, Field target_node_field_value, int target_node_field, int target_node_join_field) {
         this.nodes = nodes;
@@ -40,6 +44,63 @@ public class DFSJoin extends Operator {
         this.target_node_field = target_node_field;
         this.target_node_field_value = target_node_field_value;
         this.target_node_join_field = target_node_join_field;
+
+        TupleDesc edges_td = edges.getTupleDesc();
+        Type node_key_type = edges_td.getFieldType(target_node_join_field);
+        this.td = new TupleDesc(new Type[] {Type.INT_TYPE, Type.INT_TYPE, node_key_type}, new String[] {"path_number", "path_index", "node"});
+        generateTuplePaths();
+    }
+
+    /**
+     * @see simpledb.TupleDesc#merge(TupleDesc, TupleDesc) for possible
+     *      implementation logic.
+     */
+    public TupleDesc getTupleDesc() {
+        return this.td;
+    }
+
+    private void generateTuplePaths() {
+        HashSet<ArrayList<Field>> paths = getPaths();
+        System.out.println("Tuple Paths in Constructor " + paths);
+        int path_index = 0;
+        for (ArrayList<Field> p : paths) {
+            for (int i=0; i<p.size(); i++) {
+                Tuple t = new Tuple(td);
+                t.setField(0, new IntField(path_index));
+                t.setField(1, new IntField(i));
+                t.setField(2, p.get(i));
+                tuple_path_list.add(t);
+            }
+            path_index++;
+        }
+        nodes_visited = new HashSet<Field>();
+        nodes.close();
+        edges.close();	
+    }
+
+    public void open() throws DbException, NoSuchElementException,
+            TransactionAbortedException {
+    	super.open();
+        tuple_iterator = tuple_path_list.iterator();
+    }
+
+    public void close() {
+        tuple_iterator = null;
+        super.close();
+
+    }
+
+    public void rewind() throws DbException, TransactionAbortedException {
+    	close();
+    	open();
+    }
+
+    protected Tuple fetchNext() throws TransactionAbortedException, DbException {
+        if (tuple_iterator.hasNext()) {
+            Tuple t = tuple_iterator.next();
+            return t;
+        }
+        return null;
     }
 
     public HashSet<ArrayList<Field>> getPaths() {
@@ -50,12 +111,15 @@ public class DFSJoin extends Operator {
     	} catch (TransactionAbortedException e) {
     		e.printStackTrace();
     	}
-    	return null;
+        HashSet<ArrayList<Field>> f = new HashSet<ArrayList<Field>>();
+    	return f;
     }
 
     @SuppressWarnings("unchecked")
     private HashSet<ArrayList<Field>> getPaths(Field s_node, ArrayList<Field> path_so_far, OpIterator edges, OpIterator nodes) 
     throws DbException, TransactionAbortedException {
+        edges.rewind();
+        nodes.rewind();
         System.out.println("Getting Paths");
     	HashSet<ArrayList<Field>> paths_from_node = new HashSet<ArrayList<Field>>();
     	path_so_far.add(s_node);
@@ -79,12 +143,13 @@ public class DFSJoin extends Operator {
             get_next_node_iterator.open();
             boolean end_node_reached = false;
             while (get_next_node_iterator.hasNext()) {
+                System.out.println("This filter should only run once here");
                 Tuple next_node = get_next_node_iterator.next();
                 System.out.println("Next Node " + next_node);
                 Field filter_field = next_node.getField(this.target_node_field);
                 end_node_reached = filter_field.compare(this.target_node_op, this.target_node_field_value);
-
             }
+            get_next_node_iterator.close();
             System.out.println("End Node Reached "  + end_node_reached);
             if (end_node_reached) {
                 path.add(next_node_id_field);
@@ -93,74 +158,14 @@ public class DFSJoin extends Operator {
                 System.out.println("Next Node Id Field " + next_node_id_field + " Nodes visited " + nodes_visited);
                 continue;
             } else {
+                System.out.println("Recursing on subpaths");
                 HashSet<ArrayList<Field>> subpaths = getPaths(next_node_id_field, path, edges, nodes);
     			paths_from_node.addAll(subpaths);
             }
     	}
-        // System.out.println("Paths from node: " + paths_from_node);
-    	return paths_from_node;    	
-    }
-
-    /**
-     * @return
-     *       the field name of join field1. Should be quantified by
-     *       alias or table name.
-     * */
-    public String getJoinField1Name() {
-    	return "";
-    }
-
-    /**
-     * @return
-     *       the field name of join field2. Should be quantified by
-     *       alias or table name.
-     * */
-    public String getJoinField2Name() {
-    	return "";
-    }
-
-    /**
-     * @see simpledb.TupleDesc#merge(TupleDesc, TupleDesc) for possible
-     *      implementation logic.
-     */
-    public TupleDesc getTupleDesc() {
-    	return edges.getTupleDesc();
-    }
-
-    public void open() throws DbException, NoSuchElementException,
-            TransactionAbortedException {
-    	super.open();
-    }
-
-    public void close() {
-    	super.close();
-    }
-
-    public void rewind() throws DbException, TransactionAbortedException {
-    	close();
-    	open();
-    }
-
-    /**
-     * Returns the next tuple generated by the join, or null if there are no
-     * more tuples. Logically, this is the next tuple in r1 cross r2 that
-     * satisfies the join predicate. There are many possible implementations;
-     * the simplest is a nested loops join.
-     * <p>
-     * Note that the tuples returned from this particular implementation of Join
-     * are simply the concatenation of joining tuples from the left and right
-     * relation. Therefore, if an equality predicate is used there will be two
-     * copies of the join attribute in the results. (Removing such duplicate
-     * columns can be done with an additional projection operator if needed.)
-     * <p>
-     * For example, if one tuple is {1,2,3} and the other tuple is {1,5,6},
-     * joined on equality of the first column, then this returns {1,2,3,1,5,6}.
-     * 
-     * @return The next matching tuple.
-     * @see JoinPredicate#filter
-     */
-    protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-    	return null;
+        // edges_to_follow.close();
+        System.out.println("Return nodes: " + paths_from_node);
+    	return paths_from_node;
     }
 
     @Override
@@ -170,8 +175,6 @@ public class DFSJoin extends Operator {
 
     @Override
     public void setChildren(OpIterator[] children) {
-    	
+        return;
     }
-    
-
 }

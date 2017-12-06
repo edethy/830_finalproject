@@ -41,18 +41,13 @@ public class DFSJoinTest extends SimpleDbTestBase {
 
 	  DFSJoin dfs_join_search = new DFSJoin(node_table, edge_table, start_node, node_pk_field, target_node_op,
 	  										end_node_field_val, target_node_field, target_node_join_field);
-	  
-	  HashSet<ArrayList<Field>> paths = dfs_join_search.getPaths();
-	  System.out.println("Paths: " + paths);
 
-	  HashSet<ArrayList<Field>> expected_set = new HashSet<ArrayList<Field>>();
-	  ArrayList<Field> expected_path = new ArrayList<Field>();
-	  expected_path.add(new StringField("A", 1));
-	  expected_path.add(new StringField("B", 1));
-	  expected_path.add(new StringField("C", 1));	  
-	  expected_path.add(new StringField("D", 1));
-	  expected_set.add(expected_path);
-	  assertEquals(expected_set, paths);
+	  dfs_join_search.open();
+	  while (dfs_join_search.hasNext()) {
+		  Tuple next_tup = dfs_join_search.next();
+		  System.out.println("Next Tuple: " + next_tup);
+	  }
+	  
   }
 
     @Test public void testStopReachValidNode() throws Exception {
@@ -79,18 +74,16 @@ public class DFSJoinTest extends SimpleDbTestBase {
 	  DFSJoin dfs_join_search = new DFSJoin(node_table, edge_table, start_node, node_pk_field, target_node_op,
 	  										end_node_field_val, target_node_field, target_node_join_field);
 
-	  HashSet<ArrayList<Field>> paths = dfs_join_search.getPaths();
-	  System.out.println("Paths: " + paths);
-
-	  HashSet<ArrayList<Field>> expected_set = new HashSet<ArrayList<Field>>();
-	  ArrayList<Field> expected_path = new ArrayList<Field>();
-	  expected_path.add(new StringField("A", 1));
-	  expected_path.add(new StringField("B", 1));
-	  expected_path.add(new StringField("C", 1));	  
-	  expected_set.add(expected_path);
-	  assertEquals(expected_set, paths);
+	  // Need to get a set of expected tuples to compare to what we get from the iterator
+	  // Expect --> 0 0 A, 0 1 B 0 2 C
+	  dfs_join_search.open();
+	  while (dfs_join_search.hasNext()) {
+		  Tuple next_tuple = dfs_join_search.next();
+		  System.out.println("Next Tuple: " + next_tuple);
+		  // Check that in expected set and remove from set
+		  // how to check for Tuple equality... hmmmm, excellent question
+	  }
   }
-  
  
 
   /**
