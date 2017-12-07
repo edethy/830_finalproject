@@ -63,9 +63,9 @@ public class test {
                 
                 if(!first) {
                     Long threshold = 500L;   // in minute
-                    // Add an edge only there are too much time gap bw the current tab and the prev tab
+                    // Add an edge only when there are too much time gap bw the current tab and the prev tab
                     if( prevSince + time + threshold >= sinceNumber && prevID != id)
-                        edgeTableWriter.println(prevID + ", " + id);  
+                        edgeTableWriter.println(prevID + ", " + id + ", " + sinceNumber);  
                 }
                 
                 first = false;
