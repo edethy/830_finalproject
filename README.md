@@ -1,4 +1,4 @@
-How to generate a graph from SNAP.json
+How to generate a graph from SLAP.json
 =========
 
 ant <br />
