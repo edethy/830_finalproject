@@ -19,7 +19,7 @@ public class GraphTable {
         Type edgeTypes[] = new Type[]{ Type.INT_TYPE, Type.INT_TYPE};
         
         String nodeFieldNames[] = new String[]{ "id", "since", "tabIndex", "time", "title", "windowID" };
-        String edgeFieldNames[] = new String[]{ "src", "dst"};
+        String edgeFieldNames[] = new String[]{ "id", "src", "dst", "since"};
 
         TupleDesc td1 = new TupleDesc(nodeTypes, nodeFieldNames);
         TupleDesc td2 = new TupleDesc(edgeTypes, edgeFieldNames);
