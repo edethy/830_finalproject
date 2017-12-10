@@ -42,6 +42,8 @@ public class test {
                 prevSince = 0L;
             Boolean first = true;
 
+            int edgeID = 0;
+
             for (Object o : a)
             {
                 JSONObject person = (JSONObject) o;
@@ -77,7 +79,7 @@ public class test {
                     Long threshold = 500L;   // in minute
                     // Add an edge only when there are too much time gap bw the current tab and the prev tab
                     if( prevSince + time + threshold >= sinceNumber && prevID != id)
-                        edgeTableWriter.println(prevID + ", " + id + ", " + sinceNumber);  
+                        edgeTableWriter.println(edgeID++ + ", " + prevID + ", " + id + ", " + sinceNumber);  
                 }
                 
                 first = false;
