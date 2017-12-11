@@ -135,6 +135,11 @@ public class TabStream {
 
                 try {
                     Database.getBufferPool().insertTuple(new TransactionId(), Database.getCatalog().getTableId("node"), newNode);
+
+                    // Test a new tuple inserted 
+                    // if(containsNode(idNumber)) System.out.println("New tuple successfully inserted!!");
+                    // else System.out.println("Warning!! New tuple not inserted!!");
+
                 } catch(DbException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
