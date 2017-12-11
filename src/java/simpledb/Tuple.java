@@ -94,7 +94,10 @@ public class Tuple implements Serializable {
             	tuple_string += append_string;
         	}
         }
-        String append_more = this._fieldAr[this._fieldAr.length-1].toString() + "\n";
+        String append_more = "\n";
+        if (this._fieldAr[this._fieldAr.length-1] != null) {
+            append_more = this._fieldAr[this._fieldAr.length-1].toString() + "\n";
+        }
         tuple_string += append_more;
         return tuple_string;
     }

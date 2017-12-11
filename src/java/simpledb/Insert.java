@@ -88,7 +88,7 @@ public class Insert extends Operator {
         	}
     	} catch (IOException e) {System.out.println("Exception caught reading tuples " + e); }
 		t.setField(0, new IntField(insert_tuple_count)); 
-		insert_complete = true;
+        insert_complete = true;
 		return t;
     }
 

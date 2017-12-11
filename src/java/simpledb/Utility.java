@@ -123,6 +123,35 @@ public class Utility {
         return hf;
     }
 
+        /**
+     * A utility method to create a new HeapFile with a single empty page,
+     * assuming the path does not already exist. If the path exists, the file
+     * will be overwritten. The new table will be added to the Catalog with
+     * the specified number of columns as IntFields.
+     */
+    public static HeapFile createEmptyHeapFile(String path, TupleDesc td)
+        throws IOException {
+        File f = new File(path);
+        // touch the file
+        FileOutputStream fos = new FileOutputStream(f);
+        fos.write(new byte[0]);
+        fos.close();
+
+        HeapFile hf = openHeapFile(td, f);
+        HeapPageId pid = new HeapPageId(hf.getId(), 0);
+
+        HeapPage page = null;
+        try {
+            page = new HeapPage(pid, HeapPage.createEmptyPageData());
+        } catch (IOException e) {
+            // this should never happen for an empty page; bail;
+            throw new RuntimeException("failed to create empty page in HeapFile");
+        }
+
+        hf.writePage(page);
+        return hf;
+    }
+
     /** Opens a HeapFile and adds it to the catalog.
      *
      * @param cols number of columns in the table.
@@ -132,6 +161,19 @@ public class Utility {
     public static HeapFile openHeapFile(int cols, File f) {
         // create the HeapFile and add it to the catalog
     	TupleDesc td = getTupleDesc(cols);
+        HeapFile hf = new HeapFile(f, td);
+        Database.getCatalog().addTable(hf, UUID.randomUUID().toString());
+        return hf;
+    }
+
+    /** Opens a HeapFile and adds it to the catalog.
+     *
+     * @param td TupleDesc of the table.
+     * @param f location of the file storing the table.
+     * @return the opened table.
+     */
+    public static HeapFile openHeapFile(TupleDesc td, File f) {
+        // create the HeapFile and add it to the catalog
         HeapFile hf = new HeapFile(f, td);
         Database.getCatalog().addTable(hf, UUID.randomUUID().toString());
         return hf;

@@ -71,20 +71,25 @@ public class HeapFile implements DbFile {
     			writePage(p);
     			return p;
     		} catch(IOException e) {
+                System.out.println("IOException caught writing page: " + pid.getPageNumber());                
     			System.out.println("IO Exception caught " + e);
     			return null;
     		}
-    	}
+        }
+        long file_offset = 0;
     	try {
-    		int file_offset = pid.getPageNumber() * BufferPool.getPageSize();
+    		file_offset = pid.getPageNumber() * BufferPool.getPageSize();
     		byte byte_array[] = new byte[BufferPool.getPageSize()];
-    		RandomAccessFile file_access = new RandomAccessFile(f, "r");
+            RandomAccessFile file_access = new RandomAccessFile(f, "r");
+            if (file_offset < 0)
+                file_offset = -1 * file_offset;
     		file_access.seek(file_offset);
     		file_access.readFully(byte_array);
     		file_access.close();
     		HeapPage page = new HeapPage((HeapPageId)pid, byte_array);
     		return page;
     	} catch(IOException e) {
+            System.out.println("IOException caught reading page: " + pid.getPageNumber() + " Using offset: " + file_offset + " Num Pages: " + numPages());
     		e.printStackTrace(System.out);
     		return null;
     	}

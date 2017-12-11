@@ -35,8 +35,27 @@ public class Parser {
         throw new simpledb.ParsingException("Unknown predicate " + s);
     }
 
+    public static String getOpString(Predicate.Op op) {
+        if (op == Predicate.Op.EQUALS)
+            return "=";
+        if (op == Predicate.Op.GREATER_THAN)
+            return ">";
+        if (op == Predicate.Op.GREATER_THAN_OR_EQ)
+            return ">=";
+        if (op == Predicate.Op.LESS_THAN)
+            return "<";
+        if (op == Predicate.Op.LESS_THAN_OR_EQ)
+            return "<=";
+        if (op == Predicate.Op.LIKE)
+            return "LIKE";
+        if (op == Predicate.Op.NOT_EQUALS)
+            return "!=";
+        return null;
+     }
+
     void processExpression(TransactionId tid, ZExpression wx, LogicalPlan lp)
             throws simpledb.ParsingException {
+        System.out.println("ZExpression wx: " + wx);
         if (wx.getOperator().equals("AND")) {
             for (int i = 0; i < wx.nbOperands(); i++) {
                 if (!(wx.getOperand(i) instanceof ZExpression)) {
@@ -278,7 +297,10 @@ public class Parser {
             simpledb.ParsingException, Zql.ParseException {
         Query query = new Query(tId);
 
+        System.out.println("Query Statement: " + s);
+
         LogicalPlan lp = parseQueryLogicalPlan(tId, s);
+        System.out.println("LogicalPlan: " + lp);
         OpIterator physicalPlan = lp.physicalPlan(tId,
                 TableStats.getStatsMap(), explain);
         query.setPhysicalPlan(physicalPlan);
@@ -501,11 +523,93 @@ public class Parser {
         }
     }
 
-    public void processNextStatement(InputStream is) {
+    public Query processNextStatementAndReturn(String s_input) {
         try {
+            InputStream is = new ByteArrayInputStream(s_input.getBytes("UTF-8"));
+            System.out.println("Processing next statement from InputStream: " + is);
             ZqlParser p = new ZqlParser(is);
             ZStatement s = p.readStatement();
+            System.out.println("ZStatement: " + s);
+            Query query = null;
+            if (s instanceof ZTransactStmt)
+                handleTransactStatement((ZTransactStmt) s);
+            else {
+                if (!this.inUserTrans) {
+                    curtrans = new Transaction();
+                    curtrans.start();
+                    System.out.println("Started a new transaction tid = "
+                            + curtrans.getId().getId());
+                }
+                try {
+                    if (s instanceof ZInsert)
+                        query = handleInsertStatement((ZInsert) s,
+                                curtrans.getId());
+                    else if (s instanceof ZDelete)
+                        query = handleDeleteStatement((ZDelete) s,
+                                curtrans.getId());
+                    else if (s instanceof ZQuery)
+                        query = handleQueryStatement((ZQuery) s,
+                                curtrans.getId());
+                    else {
+                        System.out
+                                .println("Can't parse "
+                                        + s
+                                        + "\n -- parser only handles SQL transactions, insert, delete, and select statements");
+                    }
+                    return query;
+                    // if (query != null)
+                    //     query.execute();
 
+                    // if (!inUserTrans && curtrans != null) {
+                    //     curtrans.commit();
+                    //     System.out.println("Transaction "
+                    //             + curtrans.getId().getId() + " committed.");
+                    // }
+                } catch (Throwable a) {
+                    // Whenever error happens, abort the current transaction
+                    if (curtrans != null) {
+                        curtrans.abort();
+                        System.out.println("Transaction "
+                                + curtrans.getId().getId()
+                                + " aborted because of unhandled error");
+                    }
+                    this.inUserTrans = false;
+
+                    if (a instanceof simpledb.ParsingException
+                            || a instanceof Zql.ParseException)
+                        throw new ParsingException((Exception) a);
+                    if (a instanceof Zql.TokenMgrError)
+                        throw (Zql.TokenMgrError) a;
+                    throw new DbException(a.getMessage());
+                } finally {
+                    if (!inUserTrans)
+                        curtrans = null;
+                }
+            }
+
+        } catch (TransactionAbortedException e) {
+            e.printStackTrace();
+        } catch (DbException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (simpledb.ParsingException e) {
+            System.out
+                    .println("Invalid SQL expression: \n \t" + e.getMessage());
+        } catch (Zql.ParseException e) {
+            System.out.println("Invalid SQL expression: \n \t " + e);
+        } catch (Zql.TokenMgrError e) {
+            System.out.println("Invalid SQL expression: \n \t " + e);
+        }
+        return null;    
+    }
+
+    public void processNextStatement(InputStream is) {
+        try {
+            System.out.println("Processing next statement from InputStream: " + is);
+            ZqlParser p = new ZqlParser(is);
+            ZStatement s = p.readStatement();
+            System.out.println("ZStatement: " + s);
             Query query = null;
             if (s instanceof ZTransactStmt)
                 handleTransactStatement((ZTransactStmt) s);
@@ -582,6 +686,10 @@ public class Parser {
     public static final String[] SQL_COMMANDS = { "select", "from", "where",
             "group by", "max(", "min(", "avg(", "count", "rollback", "commit",
             "insert", "delete", "values", "into" };
+
+    public static final String[] GRAPH_COMMANDS = {"GET PATH", "FROM", "EDGES(", "NODES("};
+
+    public static final String[] MATERIALIZE_VIEW_COMMANDS = {"MATERIALIZE VIEW"};
 
     public static void main(String argv[]) throws IOException {
 
@@ -673,6 +781,11 @@ public class Parser {
                     int split = line.indexOf(';');
                     buffer.append(line.substring(0, split + 1));
                     String cmd = buffer.toString().trim();
+                    if (cmd.startsWith("get paths") || cmd.startsWith("materialize view") || cmd.startsWith("get subpaths")) {
+                        GraphParser gp = new GraphParser();
+                        gp.processQuery(cmd);
+                        return;
+                    }
                     cmd = cmd.substring(0, cmd.length() - 1).trim() + ";";
                     byte[] statementBytes = cmd.getBytes("UTF-8");
                     if (cmd.equalsIgnoreCase("quit;")

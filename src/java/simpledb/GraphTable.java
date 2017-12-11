@@ -33,13 +33,10 @@ public class GraphTable {
         int nodeTableID = Database.getCatalog().getTableId("node");
         System.out.println("NODE table: "+ Database.getCatalog().getTupleDesc(nodeTableID));
 
-
         edge = new HeapFile(new File("edge.dat"), td2);
         Database.getCatalog().addTable(edge, "edge");
         int edgeTableID = Database.getCatalog().getTableId("edge");
-        System.out.println("EDGE table: "+ Database.getCatalog().getTupleDesc(edgeTableID));
-       
-
+        System.out.println("EDGE table: "+ Database.getCatalog().getTupleDesc(edgeTableID));   
     }
 
 }

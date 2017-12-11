@@ -33,6 +33,14 @@ public class StringField implements Field {
 			value = s;
 	}
 
+	public StringField(String s) {
+		this.maxSize=128;
+		if (s.length() > maxSize)
+			value = s.substring(0, maxSize);
+		else
+			value = s;
+	}
+
 	public String toString() {
 		return value;
 	}

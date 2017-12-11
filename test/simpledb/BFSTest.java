@@ -57,6 +57,20 @@ public class BFSTest extends SimpleDbTestBase {
 	  assertEquals(expected_set, paths);
  }
  
+   @Test public void testNoEndNode() throws Exception {
+	  String[] tup_data = new String[] {"A","B","B","C","C","D","D","E","E","F"};
+	  edge_table = TestUtil.createTupleList(testWidth, tup_data);
+	  StringField start_node = new StringField("A",1);
+	  StringField end_node = new StringField("Z",1);
+	  BFS bfs = new BFS(start_node, end_node, this.edge_table, 0, 1);
+	  HashSet<ArrayList<Field>> paths = bfs.getPaths();
+	  System.out.println("Returned HashSet " + paths);
+	  HashSet<ArrayList<Field>> expected_set = new HashSet<ArrayList<Field>>();
+	  ArrayList<Field> expected_path = new ArrayList<Field>();
+	  expected_set.add(expected_path);
+	  assertEquals(expected_set, paths);
+ }
+
  @Test public void testMultiplePathsToEndNode() throws Exception  {
 	 //Test Graph with 2 possibilities from C->D
 	 // C->D or C->F->D

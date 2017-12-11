@@ -118,6 +118,23 @@ public class Catalog {
         throw new NoSuchElementException("No File exists with that id");
    }
 
+   public boolean tableExists(int tableid) {
+       // Check if table exists
+        for (DbFile file : file_list) {
+    		if (file.getId() == tableid) {
+    			return true;
+    		}
+    	}
+        return false;
+   }
+
+   public boolean tableExists(String name) {
+    	if (name != null && name_to_file_map.containsKey(name)) {
+    		return true;
+    	}
+        return false;
+   }
+
     public String getPrimaryKey(int tableid) {
     	String table_name = this.getTableName(tableid);
     	return name_to_pkey_map.get(table_name);

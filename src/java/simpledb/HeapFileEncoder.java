@@ -138,6 +138,7 @@ public class HeapFileEncoder {
             first = false;
         if (c == fieldSeparator || c == '\n' || c == '\r') {
             String s = new String(buf, 0, curpos);
+            System.out.println("S: " + s);
             if (typeAr[fieldNo] == Type.INT_TYPE) {
                 try {
                     pageStream.writeInt(Integer.parseInt(s.trim()));
