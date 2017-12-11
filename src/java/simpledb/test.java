@@ -72,7 +72,7 @@ public class test {
         try {   
             JSONArray a = (JSONArray) parser.parse(new FileReader("g1.json"));
             PrintWriter nodeTableWriter = new PrintWriter(argv[0], "UTF-8");
-            PrintWriter edgeTableWriter = new PrintWriter("edge.txt", "UTF-8");
+            PrintWriter edgeTableWriter = new PrintWriter("edge_tmp.txt", "UTF-8");
 
             // To check wheter the node is already added to table
             HashMap<Long, Boolean> checkAdded = new HashMap<>();
@@ -90,8 +90,8 @@ public class test {
                 String since = (String) person.get("since");
                 since = since.split(" GMT")[0];
                 Long tabIndex = (Long) person.get("tabIndex");
-                Long time = (Long) person.get("time");
-                time = time * 60; // in sec
+                Long time = (Long) person.get("time"); // in sec
+                // time = time * 60; 
                 String title = (String) person.get("title");
                 Long windowID = (Long) person.get("windowID");
 
@@ -114,10 +114,14 @@ public class test {
                 }
                 
                 if(!first) {
-                    Long threshold = 500L;   // in minute
+                    Long threshold = 3000L;   // MMSS
                     // Add an edge only when there are too much time gap bw the current tab and the prev tab
-                    if( prevSince + time + threshold >= sinceNumber && prevID != id)
+                    if( prevSince + time / 60 * 100 + time % 60  + threshold >= sinceNumber && prevID != id)
                         edgeTableWriter.println(edgeID++ + ", " + prevID + ", " + id + ", " + sinceNumber);  
+                    else if(prevID != id) {  // time break (s, -1), (d, -1)
+                        edgeTableWriter.println(edgeID++ + ", " + prevID + ", -1, " + sinceNumber);
+                        edgeTableWriter.println(edgeID++ + ", -1, " + id + ", " + sinceNumber);
+                    }  
                 }
                 
                 first = false;
@@ -141,6 +145,7 @@ public class test {
 
 
             sortEdge(argv[1]);
+            System.out.println("SLAP: graph .txt created at " + argv[0] + ", " + argv[1]);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();

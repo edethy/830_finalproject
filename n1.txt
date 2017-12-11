@@ -1,7 +1,3 @@
-0, 1119045022, 0, 300, "www.facebook.com/", 1
-1, 1119045032, 3, 1260, "www.youtube.com/", 1
-2, 1119022048, 3, 2400, "docs.google.com/document/d/1zdJhAijr0CHF-6gYDpS7tRfFlA4v_UZSx_8tRL7rPZw/edit", 1
-3, 1119022155, 4, 420, "app.grammarly.com/docs/new", 1
-4, 1119022206, 1, 2280, "goo.gl/PnLiCZ", 1
-5, 1119022208, 2, 720, "us.shein.com/Poplin-Insert-Plaid-Dress-p-384442-cat-1727.html", 1
-6, 1119022900, 2, 240, "us.shein.com/Turtleneck-Ribbed-Slim-Fit-T-shirt-p-340854-cat-1738.html", 1
+2,1119044718,0,300,"www.facebook.com/",1
+367,1119044918,3,1260,"www.youtube.com/",1
+386, 1119022048, 3, 2400, "docs.google.com/document/d/1zdJhAijr0CHF-6gYDpS7tRfFlA4v_UZSx_8tRL7rPZw/edit", 1
