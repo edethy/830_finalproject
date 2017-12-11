@@ -12,8 +12,10 @@ import java.text.*;
 
 
 public class GraphTable {
+    public HeapFile node;
+    public HeapFile edge;
 
-    public static void main(String[] argv) {
+    public GraphTable() {
         // construct table for node & edge
         Type nodeTypes[] = new Type[]{ Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.STRING_TYPE, Type.INT_TYPE };
         Type edgeTypes[] = new Type[]{ Type.INT_TYPE, Type.INT_TYPE};
@@ -26,14 +28,14 @@ public class GraphTable {
 
         // create the tables, associate them with the data files3
         // and tell the catalog about the schema  the tables.
-        HeapFile table1 = new HeapFile(new File("tt.dat"), td1);
-        Database.getCatalog().addTable(table1, "node");
+        node = new HeapFile(new File("tt.dat"), td1);
+        Database.getCatalog().addTable(node, "node");
         int nodeTableID = Database.getCatalog().getTableId("node");
         System.out.println("NODE table: "+ Database.getCatalog().getTupleDesc(nodeTableID));
 
 
-        HeapFile table2 = new HeapFile(new File("edge.dat"), td2);
-        Database.getCatalog().addTable(table2, "edge");
+        HeapFile edge = new HeapFile(new File("edge.dat"), td2);
+        Database.getCatalog().addTable(edge, "edge");
         int edgeTableID = Database.getCatalog().getTableId("edge");
         System.out.println("EDGE table: "+ Database.getCatalog().getTupleDesc(edgeTableID));
        

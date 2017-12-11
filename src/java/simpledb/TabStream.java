@@ -20,29 +20,7 @@ import java.io.FileInputStream;
 
 public class TabStream {
     private static DatabaseReference database;
-
-    class Node {
-        Long id;
-        String since;
-        Long tabIndex;
-        Long time;
-        String title;
-        Long windowID;
-
-        public Node() {
-
-        }
-
-        public Node(Long id, String since, Long tabIndex, Long time, String title, Long windowID) {
-            System.out.println(id);
-            this.id = id;
-            this.since = since.split(" GMT")[0];
-            this.tabIndex = tabIndex;
-            this.time = time * 60;
-            this.title = title;
-            this.windowID = windowID;
-        }
-    }
+    private static GraphTable graph;
 
     public static int parseDate(String since) {
         int sinceNumber = 0;
@@ -64,7 +42,30 @@ public class TabStream {
         return sinceNumber;
     }
 
+    public static boolean containsNode(int id) throws DbException, TransactionAbortedException {
+        SeqScan ss = new SeqScan(new TransactionId(), graph.node.getId(), "");
+        Predicate p = new Predicate(0, Predicate.Op.EQUALS, new IntField(id));
+    	Filter nodes = new Filter(p, ss);
+
+    	nodes.open();
+        
+    	if(nodes.hasNext()) {
+    		Tuple next_node = nodes.next();
+            System.out.println("Next Edge " + next_node);
+            
+            nodes.close();
+            return true;
+        }
+
+        nodes.close();
+        return false;
+    }
+
     public static void main(String[] args) throws InterruptedException, IOException, DbException {
+        // Create a table from .json
+        graph = new GraphTable();
+
+        // Set up firebase to open up RT stream
         try {
             FileInputStream serviceAccount = new FileInputStream("slap-3eac9-firebase-adminsdk-1k81v-e5e0d9dcb9.json");
             FirebaseOptions options = new FirebaseOptions.Builder()
@@ -84,12 +85,20 @@ public class TabStream {
         // Attach a listener to read the data at our posts reference
         database.addChildEventListener(new ChildEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey)  {
                 if(dataSnapshot.child("id").getValue() == null) return;
 
                 String id = dataSnapshot.child("id").getValue().toString();
-                // System.out.println("test" + Integer.parseInt(id));
-        
+                int idNumber = Integer.parseInt(id) + 10000; // to avoid duplicate 
+
+                try {
+                    if(containsNode(idNumber)) return; 
+                } catch (DbException e) {
+                    e.printStackTrace();
+                } catch (TransactionAbortedException e) {
+                    e.printStackTrace();
+                }
+                
                 String since = dataSnapshot.child("since").getValue().toString();
                 since = since.split(" GMT")[0];
                 int sinceNumber = parseDate(since);
@@ -110,7 +119,7 @@ public class TabStream {
                 // //int,int,int,int,string,int
                 TupleDesc nodeTD = new TupleDesc(new Type[] {Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.STRING_TYPE, Type.INT_TYPE}, new String[] {"id", "since", "tabIndex", "time", "title", "windowID"});
                 Tuple newNode = new Tuple(nodeTD);
-                newNode.setField(0, new IntField(Integer.parseInt(id))); // id
+                newNode.setField(0, new IntField(idNumber)); // id
                 newNode.setField(1, new IntField(sinceNumber)); // since
                 newNode.setField(2, new IntField(Integer.parseInt(tabIndex))); // tabIndex
                 newNode.setField(3, new IntField(timeNumber)); // time
