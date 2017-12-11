@@ -24,16 +24,54 @@ import com.google.firebase.database.*;
 // import com.google.api.client.auth.oauth2.*;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import java.io.FileInputStream;
 
 public class test {
+    public static void sortEdge(String filename) throws InterruptedException, IOException {
+        String inputFile = "edge_tmp.txt";
+		String outputFile = filename;
+
+		FileReader fileReader = new FileReader(inputFile);
+		BufferedReader bufferedReader = new BufferedReader(fileReader);
+		String inputLine;
+		List<String> lineList = new ArrayList<String>();
+		while ((inputLine = bufferedReader.readLine()) != null) {
+			lineList.add(inputLine);
+		}
+		fileReader.close();
+
+		Collections.sort(lineList, (String r1, String r2) ->
+        r1.split(", ")[3].compareTo(r2.split(", ")[3]));
+
+		FileWriter fileWriter = new FileWriter(outputFile);
+		PrintWriter out = new PrintWriter(fileWriter);
+		for (String outputLine : lineList) {
+			out.println(outputLine);
+		}
+		out.flush();
+		out.close();
+		fileWriter.close();
+
+    }
+
     public static void main(String[] argv) throws InterruptedException, IOException {
+        if(argv.length < 2) {
+            System.out.println("SLAP: Need two args! [input_file_name.txt] [output_file_name.txt]");
+            return;
+        }
+    
         JSONParser parser = new JSONParser();
         try {   
-            
-
             JSONArray a = (JSONArray) parser.parse(new FileReader("g1.json"));
-            PrintWriter nodeTableWriter = new PrintWriter("tt.txt", "UTF-8");
+            PrintWriter nodeTableWriter = new PrintWriter(argv[0], "UTF-8");
             PrintWriter edgeTableWriter = new PrintWriter("edge.txt", "UTF-8");
 
             // To check wheter the node is already added to table
@@ -101,6 +139,9 @@ public class test {
             nodeTableWriter.close();
             edgeTableWriter.close();
 
+
+            sortEdge(argv[1]);
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -108,6 +149,8 @@ public class test {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
+        
     }
 
 }

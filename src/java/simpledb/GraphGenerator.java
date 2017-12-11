@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat;
 import java.text.*;
 
 
-public class DatGenerator {
+public class GraphGenerator {
     public HeapFile node;
     public HeapFile edge;
 

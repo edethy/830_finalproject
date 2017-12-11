@@ -28,13 +28,13 @@ public class GraphTable {
 
         // create the tables, associate them with the data files3
         // and tell the catalog about the schema  the tables.
-        node = new HeapFile(new File("n1.dat"), td1);
+        node = new HeapFile(new File("n_big.dat"), td1);
         Database.getCatalog().addTable(node, "node");
         int nodeTableID = Database.getCatalog().getTableId("node");
         System.out.println("NODE table: "+ Database.getCatalog().getTupleDesc(nodeTableID));
 
 
-        edge = new HeapFile(new File("v1.dat"), td2);
+        edge = new HeapFile(new File("edge.dat"), td2);
         Database.getCatalog().addTable(edge, "edge");
         int edgeTableID = Database.getCatalog().getTableId("edge");
         System.out.println("EDGE table: "+ Database.getCatalog().getTupleDesc(edgeTableID));
