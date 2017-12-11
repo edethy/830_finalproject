@@ -43,7 +43,7 @@ public class IntHistogram {
      * @param v Value to add to the histogram
      */
     public void addValue(int v) {
-		System.out.println("hist add val " + v);
+		// System.out.println("hist add val " + v);
     	int bucket;
     	if (v==min) {
     		bucket = 0;

@@ -1,0 +1,5 @@
+2, 1119044718, 0, 5, "www.facebook.com/", 1
+367, 1119044918, 3, 21, "www.youtube.com/", 1
+386, 1119022048, 3, 40, "docs.google.com/document/d/1zdJhAijr0CHF-6gYDpS7tRfFlA4v_UZSx_8tRL7rPZw/edit", 1
+390, 1119022155, 4, 7, "app.grammarly.com/docs/new", 1
+406, 1119024037, 1, 38, "goo.gl/PnLiCZ", 1

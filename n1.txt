@@ -1,3 +1,2 @@
 2,1119044718,0,300,"www.facebook.com/",1
 367,1119044918,3,1260,"www.youtube.com/",1
-386, 1119022048, 3, 2400, "docs.google.com/document/d/1zdJhAijr0CHF-6gYDpS7tRfFlA4v_UZSx_8tRL7rPZw/edit", 1
