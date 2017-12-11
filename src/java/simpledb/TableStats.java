@@ -104,7 +104,7 @@ public class TableStats {
     	int j=0;
     	while (td_iterator.hasNext()) {
             TupleDesc.TDItem td_item = td_iterator.next();
-            System.out.println("tablestat j:" + j);
+            // System.out.println("tablestat j:" + j);
     		if (td_item.fieldType == Type.INT_TYPE) {
     			int_fields.add(j);
     		} else {
@@ -142,7 +142,7 @@ public class TableStats {
     		file_scan.rewind();
     		while (file_scan.hasNext()) {    			
                 Tuple next_tup = file_scan.next();
-                System.out.println("num field:" + next_tup.getTupleDesc().numFields());
+                // System.out.println("num field:" + next_tup.getTupleDesc().numFields());
     	    	for(int z=0;z<next_tup.getTupleDesc().numFields();z++) {
     				if (string_field_hist_map.containsKey(z)) {
     					StringHistogram st = string_field_hist_map.get(z);

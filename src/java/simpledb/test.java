@@ -117,10 +117,10 @@ public class test {
                     Long threshold = 3000L;   // MMSS
                     // Add an edge only when there are too much time gap bw the current tab and the prev tab
                     if( prevSince + time / 60 * 100 + time % 60  + threshold >= sinceNumber && prevID != id)
-                        edgeTableWriter.println(edgeID++ + ", " + prevID + ", " + id + ", " + sinceNumber);  
+                        edgeTableWriter.println(prevID + ", " + id + ", " + edgeID++ + ", " + + sinceNumber);  
                     else if(prevID != id) {  // time break (s, -1), (d, -1)
-                        edgeTableWriter.println(edgeID++ + ", " + prevID + ", -1, " + sinceNumber);
-                        edgeTableWriter.println(edgeID++ + ", -1, " + id + ", " + sinceNumber);
+                        edgeTableWriter.println(prevID + ", -1, " + edgeID++ + ", " + + sinceNumber);
+                        edgeTableWriter.println("-1, " + id + ", " + edgeID++ + ", " + sinceNumber);
                     }  
                 }
                 
