@@ -94,7 +94,7 @@ public class SubPaths extends Operator {
 
     private HashSet<ArrayList<Tuple>> generateSubPaths() throws DbException, TransactionAbortedException {
         load_nodes_into_mem();
-        System.out.println("Node Tuples in Memory:\n" + node_tuples);
+        // System.out.println("Node Tuples in Memory:\n" + node_tuples);
         HashSet<Field>  pending_start_nodes = new HashSet<Field>();
         HashMap<Field, ArrayList<Tuple>> pending_paths = new HashMap<Field,ArrayList<Tuple>>();
         HashSet<ArrayList<Tuple>> paths = new HashSet<ArrayList<Tuple>>();
@@ -104,6 +104,7 @@ public class SubPaths extends Operator {
         while (edges.hasNext()) {
             edge = edges.next();
             Field start_node = edge.getField(start_node_field_index);
+
             if (start_node.equals(new IntField(-1))) {
                 pending_paths.clear();
                 pending_start_nodes.clear();
