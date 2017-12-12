@@ -54,9 +54,10 @@ public class DFSJoinTest extends SimpleDbTestBase {
 	  // Test Graph of for A->B->C->D return [A, B, C, D] for start_node=A, end_node=D
       // Nodes: A 1 B 2 C 3 D 4; 
       // Edges A B B C C D
-      // Want to go from "A" to node with target field value = 4
-	  String[] edge_tups = new String[] {"A","B","B","C","C","D"};
-	  Object[] node_tups = new Object[] {"A", 2, "B", 3, "C", 20, "D",10};
+	  // Want to go from "A" to node with target field value = 4
+	  System.out.println("Stop Reach Valid Node");
+	  String[] edge_tups = new String[] {"A","B","A","C","A","D","B","C","C","D","C","E","C","F","C","A"};
+	  Object[] node_tups = new Object[] {"A", 2, "B", 3, "C", 20, "D",10,"E",4,"F",20};
 
 	  edge_table = TestUtil.createTupleList(testWidth, edge_tups);
 	  node_table = TestUtil.createTupleList(testWidth, node_tups);

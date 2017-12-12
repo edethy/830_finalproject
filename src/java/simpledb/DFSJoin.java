@@ -87,7 +87,6 @@ public class DFSJoin extends Operator {
     public void close() {
         tuple_iterator = null;
         super.close();
-
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
@@ -105,7 +104,16 @@ public class DFSJoin extends Operator {
 
     public HashSet<ArrayList<Field>> getPaths() {
     	try {
-        	return getPaths(this.start_node_value, new ArrayList<Field>(), this.edges, this.nodes);	
+            Predicate p2 = new Predicate(node_pk_field, Predicate.Op.EQUALS, start_node_value);
+            Filter get_next_node_iterator = new Filter(p2, nodes);
+            get_next_node_iterator.open();
+            Tuple start_node = null;
+            while (get_next_node_iterator.hasNext()) {
+                start_node = get_next_node_iterator.next();
+                break;
+            }
+            System.out.println("Finding paths starting with node: " + start_node);
+        	return getPaths(start_node, new ArrayList<Field>(), this.edges, this.nodes);	
     	} catch(DbException e) {
     		e.printStackTrace();
     	} catch (TransactionAbortedException e) {
@@ -116,57 +124,103 @@ public class DFSJoin extends Operator {
     }
 
     @SuppressWarnings("unchecked")
-    private HashSet<ArrayList<Field>> getPaths(Field s_node, ArrayList<Field> path_so_far, OpIterator edges, OpIterator nodes) 
+    private HashSet<ArrayList<Field>> getPaths(Tuple s_node, ArrayList<Field> path_so_far, OpIterator edges, OpIterator nodes) 
     throws DbException, TransactionAbortedException {
-        edges.rewind();
-        nodes.rewind();
-        System.out.println("Getting Paths");
-    	HashSet<ArrayList<Field>> paths_from_node = new HashSet<ArrayList<Field>>();
-    	path_so_far.add(s_node);
-    	nodes_visited.add(s_node);
-    	Predicate p = new Predicate(this.start_node_field, Predicate.Op.EQUALS, s_node);
-    	Filter edges_to_follow = new Filter(p, edges);
+        // edges.rewind();
+        // nodes.rewind();
 
-    	edges_to_follow.open();
-    	System.out.println("Edges to follow" + edges_to_follow);
+        HashSet<ArrayList<Field>> paths_from_node = new HashSet<ArrayList<Field>>();
         
-    	while(edges_to_follow.hasNext()) {
-    		ArrayList<Field> path = (ArrayList<Field>)path_so_far.clone();
-    		Tuple next_edge = edges_to_follow.next();
-    		System.out.println("Next Edge " + next_edge);
+        Field node_pk = s_node.getField(node_pk_field);
+        Field target_field = s_node.getField(target_node_field);
 
-            System.out.println("Target node join field " + target_node_join_field);
-    		Field next_node_id_field = next_edge.getField(target_node_join_field);
-            System.out.println("Next node id field " + next_node_id_field);
-            Predicate p2 = new Predicate(node_pk_field, Predicate.Op.EQUALS, next_node_id_field);
-            Filter get_next_node_iterator = new Filter(p2, nodes);
-            get_next_node_iterator.open();
-            boolean end_node_reached = false;
-            while (get_next_node_iterator.hasNext()) {
-                System.out.println("This filter should only run once here");
-                Tuple next_node = get_next_node_iterator.next();
-                System.out.println("Next Node " + next_node);
-                Field filter_field = next_node.getField(this.target_node_field);
-                end_node_reached = filter_field.compare(this.target_node_op, this.target_node_field_value);
+        System.out.println("Start Node: " + s_node);
+
+        if (target_field.equals(target_node_field_value)) {
+            path_so_far.add(node_pk);
+            paths_from_node.add(path_so_far);
+            return paths_from_node;
+        } else if (path_so_far.contains(node_pk)) {
+            return paths_from_node;
+        } else {
+            path_so_far.add(node_pk);
+            Predicate p = new Predicate(this.start_node_field, Predicate.Op.EQUALS, node_pk);
+            Filter edges_to_follow = new Filter(p, edges);
+            edges_to_follow.open();
+            int count=0;
+            while(edges_to_follow.hasNext() && count < 10) {
+                count++;
+                ArrayList<Field> path = (ArrayList<Field>)path_so_far.clone();
+                Tuple next_edge = edges_to_follow.next();
+                System.out.println("Next Edge: " + next_edge);
+                Field next_node_id_field = next_edge.getField(target_node_join_field);
+                Predicate p2 = new Predicate(node_pk_field, Predicate.Op.EQUALS, next_node_id_field);
+                Filter get_next_node_iterator = new Filter(p2, nodes);
+                get_next_node_iterator.open();
+                Tuple next_node = null;
+                while (get_next_node_iterator.hasNext()) {
+                    next_node = get_next_node_iterator.next();
+                    System.out.println("Next Node: " + next_node);
+                    break;
+                }
+                get_next_node_iterator.close();
+                if (next_node != null) {
+                    System.out.println("Path: " + path);
+                    HashSet<ArrayList<Field>> new_paths = getPaths(next_node, path, edges, nodes);
+                    paths_from_node.addAll(new_paths);
+                }
             }
-            get_next_node_iterator.close();
-            System.out.println("End Node Reached "  + end_node_reached);
-            if (end_node_reached) {
-                path.add(next_node_id_field);
-                paths_from_node.add(path);
-            } else if (nodes_visited.contains(next_node_id_field)) {
-                System.out.println("Next Node Id Field " + next_node_id_field + " Nodes visited " + nodes_visited);
-                continue;
-            } else {
-                System.out.println("Recursing on subpaths");
-                HashSet<ArrayList<Field>> subpaths = getPaths(next_node_id_field, path, edges, nodes);
-    			paths_from_node.addAll(subpaths);
-            }
-    	}
-        // edges_to_follow.close();
-        System.out.println("Return nodes: " + paths_from_node);
-    	return paths_from_node;
+        }
+        return paths_from_node;
     }
+
+
+        // // System.out.println("Start node field: " + start_node_field + " s_node");
+    	// Predicate p = new Predicate(this.start_node_field, Predicate.Op.EQUALS, s_node);
+    	// Filter edges_to_follow = new Filter(p, edges);
+
+    	// edges_to_follow.open();
+    	// // System.out.println("Edges to follow" + edges_to_follow);
+        
+    	// while(edges_to_follow.hasNext()) {
+    	// 	ArrayList<Field> path = (ArrayList<Field>)path_so_far.clone();
+    	// 	Tuple next_edge = edges_to_follow.next();
+    	// 	System.out.println("Next Edge " + next_edge);
+
+        //     // System.out.println("Target node join field " + target_node_join_field);
+    	// 	Field next_node_id_field = next_edge.getField(target_node_join_field);
+        //     // System.out.println("Next node id field " + next_node_id_field);
+        //     Predicate p2 = new Predicate(node_pk_field, Predicate.Op.EQUALS, next_node_id_field);
+        //     Filter get_next_node_iterator = new Filter(p2, nodes);
+        //     get_next_node_iterator.open();
+        //     boolean end_node_reached = false;
+        //     while (get_next_node_iterator.hasNext()) {
+        //         // System.out.println("This filter should only run once here");
+        //         Tuple next_node = get_next_node_iterator.next();
+        //         System.out.println("Next Node " + next_node);
+        //         Field filter_field = next_node.getField(this.target_node_field);
+        //         end_node_reached = filter_field.compare(this.target_node_op, this.target_node_field_value);
+        //     }
+        //     get_next_node_iterator.close();
+        //     // System.out.println("End Node Reached "  + end_node_reached);
+        //     if (end_node_reached) {
+        //         path.add(next_node_id_field);
+        //         paths_from_node.add(path);
+
+        //     } else if (nodes_visited.contains(next_node_id_field)) {
+        //         System.out.println("Next Node Id Field " + next_node_id_field + " Nodes visited " + nodes_visited);
+        //         continue;
+        //     } else {
+        //         System.out.println("Recursing on subpaths");
+        //         HashSet<ArrayList<Field>> subpaths = getPaths(next_node_id_field, path, edges, nodes);
+        //         paths_from_node.addAll(subpaths);
+        //         System.out.println("SubPaths; " + subpaths);
+        //     }
+    	// }
+        // // edges_to_follow.close();
+        // System.out.println("Return nodes: " + paths_from_node);
+    	// return paths_from_node;
+    // }
 
     @Override
     public OpIterator[] getChildren() {

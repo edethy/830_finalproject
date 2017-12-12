@@ -1,10 +1,8 @@
 package simpledb;
 
 import Zql.*;
-import jdk.nashorn.internal.runtime.ParserException;
 import simpledb.DFSJoin;
 import simpledb.SubPaths;
-import sun.security.pkcs.ParsingException;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -53,8 +51,8 @@ public class GraphParser {
             }
             select_query = select_query.substring(0, select_query.length() - 1).trim() + ";";
             // need to pass select query to parser or sometihng
-            Parser p = new Parser();
             // byte[] statementBytes = select_query.getBytes("UTF-8");
+            Parser p = new Parser();
             Query q = p.processNextStatementAndReturn(select_query);
             try {
                 q.start();
@@ -89,27 +87,41 @@ public class GraphParser {
     }
 
     private void parseAndRunDFSGraphPath(String[] split_query) {
-        split_query = Arrays.copyOfRange(split_query, 2, split_query.length);
-        String start_field = split_query[start_field_index];
-        String start_field_pred = split_query[start_pred_index];
-        String start_field_value = split_query[start_field_value_index];
-        String end_field = split_query[end_field_index];
-        String end_field_pred = split_query[end_field_pred_index];
-        String end_field_value = split_query[end_field_value_index];
-        String edge_table_name = split_query[edge_table_index];
-        String node_table_name = split_query[node_table_index];
-        System.out.println(
-            "Start Field: " + start_field + " \n" + 
-            "Start Field Pred: " + start_field_pred + "\n" +
-            "Start Field Value: " + start_field_value + "\n" +
-            "End Field: " + end_field + "\n" + 
-            "End Field Pred: " + end_field_pred + "\n" +
-            "End Field Value:  " + end_field_value + " \n" +
-            "Edge Table Name: " + edge_table_name + "\n" +
-            "Node Table Name: " + node_table_name
-            );
 
-        //
+        try {
+            split_query = Arrays.copyOfRange(split_query, 2, split_query.length);
+            System.out.println("Split Query: " + split_query);
+            String start_field = split_query[start_field_index];
+            String start_field_pred = split_query[start_pred_index];
+            String start_field_value = split_query[start_field_value_index];
+            String end_field = split_query[end_field_index];
+            String end_field_pred = split_query[end_field_pred_index];
+            String end_field_value = split_query[end_field_value_index];
+            String edge_table_name = split_query[edge_table_index];
+            String node_table_name = split_query[node_table_index];
+            System.out.println(
+                "Start Field: " + start_field + " \n" + 
+                "Start Field Pred: " + start_field_pred + "\n" +
+                "Start Field Value: " + start_field_value + "\n" +
+                "End Field: " + end_field + "\n" + 
+                "End Field Pred: " + end_field_pred + "\n" +
+                "End Field Value:  " + end_field_value + " \n" +
+                "Edge Table Name: " + edge_table_name + "\n" +
+                "Node Table Name: " + node_table_name
+                );
+    
+            Field start_node_value = new StringField(start_field_value);
+            Field target_node_value = new StringField(end_field_value);
+            Predicate.Op start_field_op = Parser.getOp(start_field_pred);
+            Predicate.Op target_node_op = Parser.getOp(end_field_pred);
+            int node_pk_field = 0;
+            int target_node_field = Integer.parseInt(end_field);
+            int target_node_join_field = 1;
+            // runDFSQuery(node_table_name, edge_table_name, start_node_value, node_pk_field, target_node_op, target_node_value, target_node_field, target_node_join_field);
+            runBFSQuery(node_table_name, edge_table_name, target_node_value, start_node_value, 0, 1); 
+        } catch(simpledb.ParsingException e) {
+            e.printStackTrace();
+        }
     }
 
     /***
@@ -121,6 +133,28 @@ public class GraphParser {
      * int target_node_join_field
      * 
      */
+
+/***
+ * 
+ * 
+ *     public BFS(Field start_node_id, Field end_node_id, OpIterator edges, 
+ * int start_node_field, int target_node_field) {
+
+ */
+    private void runBFSQuery(String nodes_name, String edges_name, Field end_node_id, Field start_node_id,
+                             int start_node_field, int target_node_field
+    ){
+        int nodes_tableid = Database.getCatalog().getTableId(nodes_name);
+        int edges_tableid = Database.getCatalog().getTableId(edges_name);
+
+        TransactionId tid = new TransactionId();
+        SeqScan nodes = new SeqScan(tid, nodes_tableid, "");
+        SeqScan edges = new SeqScan(tid, edges_tableid, "");
+        System.out.println("Running BFS Query");
+        BFS b = new BFS(start_node_id, end_node_id, edges, start_node_field, target_node_field);
+        System.out.println("B Paths: " + b.getPaths());
+    } 
+
 
     private void runDFSQuery(String nodes_name, String edges_name, Field start_node_value, int node_pk_field,
                             Predicate.Op target_node_op, Field target_node_field_value, int target_node_field,
@@ -183,6 +217,9 @@ public class GraphParser {
             SeqScan node_iterator = new SeqScan(tid, node_table_id, "");
             SeqScan edge_iterator = new SeqScan(tid, edge_table_id, "");
     
+
+            // First look up in materialized view table whether or not it exists
+
             SubPaths subpaths = new SubPaths(node_iterator, edge_iterator, start_node_value, target_node_value, value_field, target_node_op, start_node_op);
             subpaths.open();
             while(subpaths.hasNext()) {
@@ -194,6 +231,5 @@ public class GraphParser {
         } catch(TransactionAbortedException e) {
             e.printStackTrace();
         }
-
     }
 }

@@ -21,9 +21,9 @@ public class MaterializeView  {
 	private String table_name;
 	private TupleDesc td;
 
-    private String mv_query_table_name = "materialized_views";
-    private String mv_dfsjoin_table_name = "mv_dfspaths";
-    private String mv_subpaths_table_name = "mv_subpaths";
+    private String mv_query_table_name = "mv/materialized_views";
+    private String mv_dfsjoin_table_name = "mv/mv_dfspaths";
+    private String mv_subpaths_table_name = "mv/mv_subpaths";
 
     private TupleDesc mv_td = new TupleDesc(new Type[] {Type.STRING_TYPE, Type.STRING_TYPE}, new String[] {"view_name", "view_query"});
 
@@ -150,8 +150,6 @@ public class MaterializeView  {
                         tuple_matches = false;
                     }
                 } if (tuple_matches) {
-                    // Do something cool
-                    // like return with the table name or OpIterator or something
                     int mv_table_id = Database.getCatalog().getTableId(t.getField(0).toString());
                     return new SeqScan(tid, mv_table_id, "");
                 }

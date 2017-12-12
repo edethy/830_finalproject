@@ -57,19 +57,25 @@ public class BFS extends Operator {
     @SuppressWarnings("unchecked")
     private HashSet<ArrayList<Field>> getPaths(Field s_node, Field e_node, ArrayList<Field> path_so_far, OpIterator edges) 
     throws DbException, TransactionAbortedException {
+        edges.rewind();
     	HashSet<ArrayList<Field>> paths_from_node = new HashSet<ArrayList<Field>>();
     	path_so_far.add(s_node);
     	nodes_visited.add(s_node);
     	Predicate p = new Predicate(this.start_node_field, Predicate.Op.EQUALS, s_node);
     	Filter edges_to_follow = new Filter(p, edges);
     	edges_to_follow.open();
-    	System.out.println("Edges to follow" + edges_to_follow);
+    	// System.out.println("Edges to follow" + edges_to_follow);
     	while(edges_to_follow.hasNext()) {
     		ArrayList<Field> path = (ArrayList<Field>)path_so_far.clone();
     		Tuple next_edge = edges_to_follow.next();
     		System.out.println("Next Edge " + next_edge);
-    		Field next_node = next_edge.getField(target_node_field);
-    		if (next_node == s_node) {
+            Field next_node = next_edge.getField(target_node_field);
+            if (e_node.equals(next_node)) {
+            //    System.out.println("We found an end");
+                path.add(e_node);
+                paths_from_node.add(path);
+            }
+    		else if (next_node == s_node) {
     			continue;
     		} else if (nodes_visited.contains(next_node)) {
     			continue;
