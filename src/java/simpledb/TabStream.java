@@ -163,6 +163,10 @@ public class TabStream {
             public void onCancelled(DatabaseError databaseError) {}
         });
 
+        // Receive a query request from visualization. 
+        GraphParser gp = new GraphParser();
+        gp.processQuery(cmd);
+
         while(true) {}
     }
 }

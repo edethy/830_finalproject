@@ -207,7 +207,7 @@ public class GraphParser {
         }
     }
 
-    private void runSubPathQuery(String nodes, String edges, Field start_node_value, Field target_node_value,
+    private SubPaths runSubPathQuery(String nodes, String edges, Field start_node_value, Field target_node_value,
                                 int value_field, Predicate.Op target_node_op, Predicate.Op start_node_op
     ){
         try {
@@ -226,6 +226,8 @@ public class GraphParser {
                 Tuple path_tuple = subpaths.next();
                 System.out.println("Path Tuple: " + path_tuple);
             }
+
+            return subpaths;
         } catch(DbException e) {
             e.printStackTrace();
         } catch(TransactionAbortedException e) {
