@@ -1,0 +1,74 @@
+[
+	{
+		"blacklist": false,
+		"id": 2,
+		"since": "Sun Nov 19 2017 04:47:18 GMT-0500 (EST)crn0e",
+		"tabIndex": 0,
+		"time": 5,
+		"title": "www.facebook.com/",
+		"windowID": 1
+	},
+	{
+		"blacklist": false,
+		"id": 367,
+		"since": "Sun Nov 19 2017 04:49:18 GMT-0500 (EST)uyqce",
+		"tabIndex": 3,
+		"time": 21,
+		"title": "www.youtube.com/",
+		"windowID": 1
+	},
+	{
+		"blacklist": false,
+		"id": 2,
+		"since": "Sun Nov 19 2017 04:50:22 GMT-0500 (EST)6j4ui",
+		"tabIndex": 0,
+		"time": 4,
+		"title": "www.facebook.com/",
+		"windowID": 1
+	},
+	{
+		"blacklist": false,
+		"id": 367,
+		"since": "Sun Nov 19 2017 04:50:32 GMT-0500 (EST)4mmyj",
+		"tabIndex": 3,
+		"time": 115,
+		"title": "www.youtube.com/",
+		"windowID": 1
+    }, 
+    {
+		"blacklist": false,
+		"id": 386,
+		"since": "Sun Nov 19 2017 14:20:48 GMT-0500 (EST)zair3",
+		"tabIndex": 3,
+		"time": 40,
+		"title": "docs.google.com/document/d/1zdJhAijr0CHF-6gYDpS7tRfFlA4v_UZSx_8tRL7rPZw/edit",
+		"windowID": 1
+	},
+	{
+		"blacklist": false,
+		"id": 390,
+		"since": "Sun Nov 19 2017 14:21:55 GMT-0500 (EST)g2evl",
+		"tabIndex": 4,
+		"time": 7,
+		"title": "app.grammarly.com/docs/new",
+		"windowID": 1
+	},
+	{
+		"blacklist": false,
+		"id": 386,
+		"since": "Sun Nov 19 2017 14:22:06 GMT-0500 (EST)zb4jj",
+		"tabIndex": 3,
+		"time": 1,
+		"title": "docs.google.com/document/d/1zdJhAijr0CHF-6gYDpS7tRfFlA4v_UZSx_8tRL7rPZw/edit",
+		"windowID": 1
+	},
+	{
+		"blacklist": false,
+		"id": 2,
+		"since": "Sun Nov 19 2017 14:22:08 GMT-0500 (EST)f12mv",
+		"tabIndex": 0,
+		"time": 3,
+		"title": "www.facebook.com/",
+		"windowID": 1
+	}
+]

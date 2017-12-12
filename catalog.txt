@@ -1,1 +1,2 @@
-data (f1 int, f2 int)
+n4 (id int, since int, tabIndex int, time int, title String, windowID int)
+e4 (src int, dst int, id int, since int)

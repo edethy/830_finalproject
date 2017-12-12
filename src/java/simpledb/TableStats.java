@@ -103,7 +103,8 @@ public class TableStats {
     	Iterator<TupleDesc.TDItem> td_iterator = td.iterator();
     	int j=0;
     	while (td_iterator.hasNext()) {
-    		TupleDesc.TDItem td_item = td_iterator.next();
+            TupleDesc.TDItem td_item = td_iterator.next();
+            // System.out.println("tablestat j:" + j);
     		if (td_item.fieldType == Type.INT_TYPE) {
     			int_fields.add(j);
     		} else {
@@ -133,12 +134,15 @@ public class TableStats {
         		}
         	}
         	for (int i=0;i<int_fields.size();i++) {
-        		int[] minmax_map = field_minmax_map.get(int_fields.get(i));
-        		int_field_hist_map.put(int_fields.get(i), new IntHistogram(Math.min(NUM_HIST_BINS, minmax_map[1]-minmax_map[0]), minmax_map[0], minmax_map[1]));
+                int[] minmax_map = field_minmax_map.get(int_fields.get(i));
+                if (minmax_map[1]-minmax_map[0] == 0) 
+                int_field_hist_map.put(int_fields.get(i), new IntHistogram(1, minmax_map[0], minmax_map[1]));
+                else int_field_hist_map.put(int_fields.get(i), new IntHistogram(Math.min(NUM_HIST_BINS, minmax_map[1]-minmax_map[0]), minmax_map[0], minmax_map[1]));
         	}
     		file_scan.rewind();
     		while (file_scan.hasNext()) {    			
-    			Tuple next_tup = file_scan.next();
+                Tuple next_tup = file_scan.next();
+                // System.out.println("num field:" + next_tup.getTupleDesc().numFields());
     	    	for(int z=0;z<next_tup.getTupleDesc().numFields();z++) {
     				if (string_field_hist_map.containsKey(z)) {
     					StringHistogram st = string_field_hist_map.get(z);
