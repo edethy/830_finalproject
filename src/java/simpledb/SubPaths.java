@@ -104,13 +104,19 @@ public class SubPaths extends Operator {
         while (edges.hasNext()) {
             edge = edges.next();
             Field start_node = edge.getField(start_node_field_index);
+            if (start_node.equals(new IntField(-1))) {
+                pending_paths.clear();
+                pending_start_nodes.clear();
+                continue;
+            }
             Tuple node = node_tuples.get(start_node);
             Field node_field = node.getField(value_field);
-            System.out.println("Edge: " + edge + 
-                                "\nStart node: " + start_node +
-                                "\nNode: " + node + 
-                                "\nNodeField: " + node_field                
-            );
+            // System.out.println("Edge: " + edge + 
+            //                     "\nStart node: " + start_node +
+            //                     "\nNode: " + node + 
+            //                     "\nNodeField: " + node_field                
+            // );
+
             for (ArrayList<Tuple> p : pending_paths.values()) {
                 p.add(node);
                 if (node_field.compare(target_node_op, target_node_value)) {
