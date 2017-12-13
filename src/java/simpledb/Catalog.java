@@ -25,7 +25,7 @@ public class Catalog {
     
     public String mv_subpaths_table_name = "mv_subpaths";    
 
-    private HashSet<Tuple> materialized_subpaths = new HashSet<Tuple>();    
+    private HashMap<String, Tuple> materialized_subpaths = new HashMap<String, Tuple>();    
 
     /**
      * Constructor.
@@ -35,6 +35,7 @@ public class Catalog {
     	file_list = new ArrayList<DbFile>();
     	name_to_file_map = new ConcurrentHashMap<String, DbFile>();
         name_to_pkey_map = new ConcurrentHashMap<String, String>();
+        // loadSubPathMaterializedViews();
     }
 
     /**
@@ -62,7 +63,7 @@ public class Catalog {
 		}
     	name_to_file_map.put(name, file);
     	name_to_pkey_map.put(name, pkeyField);
-    	file_list.add(file);    
+        file_list.add(file);    
     }
 
     public void addTable(DbFile file, String name) {
@@ -174,21 +175,19 @@ public class Catalog {
     
 
     public void loadSubPathMaterializedViews() {
+        System.out.println("Caching Materialized Views from File: " + mv_subpaths_table_name);
         File mv_subpaths = new File(mv_subpaths_table_name);
-        System.out.println("File: " + mv_subpaths.getAbsolutePath());
         MaterializeViewUtil mvutil = new MaterializeViewUtil();
         TupleDesc td = mvutil.getSubPathMVTD();
         HeapFile hf = new HeapFile(mv_subpaths, td);
         addTable(hf, mv_subpaths.getName());
-
         try {
-            int table_id = Database.getCatalog().getTableId(mv_subpaths_table_name);
+            int table_id = getTableId(mv_subpaths_table_name);
             SeqScan ss = new SeqScan(new TransactionId(), table_id, "");
             ss.open();
             while(ss.hasNext()) {
                 Tuple t = ss.next();
-                System.out.println("Adding " + t + " to materialized views");                
-                materialized_subpaths.add(t);
+                materialized_subpaths.put(t.getField(0).toString(), t);
             }
             addMVTablesToCatalog();
         } catch(DbException e) {
@@ -199,33 +198,39 @@ public class Catalog {
     }
 
     private void addMVTablesToCatalog() {
-        // try {
             TupleDesc subpath_td = new TupleDesc(new Type[] {Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE},
                                                 new String[] {"PathNumber", "PathIndex", "Node", "PageNumber"});
-            for (Tuple t : materialized_subpaths) {
+            for (Tuple t : materialized_subpaths.values()) {
                 String table_name = t.getField(0).toString();
                 File mv_s = new File(table_name);
                 HeapFile hf = new HeapFile(mv_s, subpath_td);
                 addTable(hf, table_name);
+                System.out.println("Existing MaterializedView: " + table_name + " Added to Catalog");
             }
 
     }
 
     public void add_mv(Tuple t) {
-        System.out.println("Adding tuple " + t + " To materialized views");
-        materialized_subpaths.add(t);
+        System.out.println("Updating Cache with Tuple: " + t);
+        System.out.println("Complete Cache: " + materialized_subpaths.values());
+        materialized_subpaths.put(t.getField(0).toString(), t);
     }
 
     public Tuple get_mv(String expected_query) {
-        for (Tuple t : materialized_subpaths) {
+        for (Tuple t : materialized_subpaths.values()) {
             StringField t_query = (StringField)t.getField(1);
             if (t_query.toString().equals(expected_query)) {
-                // System.out.println("t query: " )
                 return t;
             }
         }
         return null;
     }
+
+    public Tuple get_mv_by_table_name(String name) {
+        return materialized_subpaths.get(name);
+    }
+
+
 
     /**
      * Reads the schema from a file and creates the appropriate tables in the database.

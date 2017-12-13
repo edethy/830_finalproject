@@ -715,7 +715,7 @@ public class Parser {
     protected void start(String[] argv) throws IOException {
         // first add tables to database
         Database.getCatalog().loadSchema(argv[0]);
-        // Database.getCatalog().loadMaterializedViews();
+        Database.getCatalog().loadSubPathMaterializedViews();
         TableStats.computeStatistics();
         MaterializeView mv  = new MaterializeView();        
 
@@ -784,9 +784,17 @@ public class Parser {
                     buffer.append(line.substring(0, split + 1));
                     String cmd = buffer.toString().trim();
                     if (cmd.startsWith("get paths") || cmd.startsWith("materialize view") || cmd.startsWith("get subpaths")) {
+                        long startTime = System.currentTimeMillis();                        
                         GraphParser gp = new GraphParser();
                         gp.processQuery(cmd);
-                        return;
+                        long time = System.currentTimeMillis() - startTime;
+                        System.out.printf("----------------\n%.2f seconds\n\n",
+                                ((double) time / 1000.0));
+    
+                        // Grab the remainder of the line
+                        line = line.substring(split + 1);
+                        buffer = new StringBuilder();
+                        break;
                     }
                     cmd = cmd.substring(0, cmd.length() - 1).trim() + ";";
                     byte[] statementBytes = cmd.getBytes("UTF-8");

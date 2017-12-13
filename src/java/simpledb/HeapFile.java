@@ -99,7 +99,6 @@ public class HeapFile implements DbFile {
     public void writePage(Page page) throws IOException {
     	RandomAccessFile raf = new RandomAccessFile(f, "rw");
         int offset = ((HeapPage)page).getId().getPageNumber() * BufferPool.getPageSize();
-        System.out.println("Trying to access offset: " + offset);
     	raf.seek(offset);
     	raf.write(page.getPageData());
     }
@@ -132,6 +131,14 @@ public class HeapFile implements DbFile {
     		}
     	}
     	throw new DbException("Unable to add tuple");
+    }
+
+    public Page updateTuple(TransactionId tid, Tuple t) throws DbException, TransactionAbortedException {
+        // overwrite the value of the tuple is slot whatever with this one
+        HeapPageId pid = (HeapPageId)t.getRecordId().getPageId();
+        HeapPage p = (HeapPage)Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE);
+        p.updateTuple(t);
+        return p;
     }
 
     // see DbFile.java for javadocs

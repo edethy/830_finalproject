@@ -254,6 +254,15 @@ public class HeapPage implements Page {
     	}
     }
 
+    public void updateTuple(Tuple t) throws DbException {
+        int tuple_no = t.getRecordId().getTupleNumber();
+    	if (isSlotUsed(tuple_no) && pid.equals(((HeapPageId)t.getRecordId().getPageId()))) {
+    		tuples[tuple_no] = t;
+    	} else  {
+    		throw new DbException("Tuple Slot Already Empty or Tuple not on this page");
+    	}
+    }
+
     /**
      * Adds the specified tuple to the page;  the tuple should be updated to reflect
      *  that it is now stored on this page.
@@ -271,9 +280,9 @@ public class HeapPage implements Page {
     	}
         for (int i=0;i<tuples.length;i++) {
         	if (tuples[i] == null) {
+                t.setRecordId(new RecordId(pid, i));                
         		tuples[i] = t;
         		markSlotUsed(i, true);
-        		t.setRecordId(new RecordId(pid, i));
         		return;
         	}
         }

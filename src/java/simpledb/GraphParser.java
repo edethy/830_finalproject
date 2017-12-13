@@ -13,7 +13,7 @@ import java.util.Random;
 
 public class GraphParser {
 
-    boolean useMaterialization = false;
+    //boolean useMaterialization = false;
 
     int start_field_index = 0;
     int start_pred_index = 1;     
@@ -29,7 +29,7 @@ public class GraphParser {
 
     MaterializeView mv  = new MaterializeView();
 
-    String subpath_query = "get subpaths from start %s %s to end %s %s using nodes %s edges %s on %s ;";
+    String subpath_query = "get subpaths from start %s %s to end %s %s using nodes %s edges %s on %s %s ;";
 
     static boolean explain = false;
 
@@ -185,7 +185,8 @@ public class GraphParser {
                 start_val = new StringField(start_val_str);
                 end_val = new StringField(end_val_str);
             }
-
+            boolean useMaterialization = Boolean.parseBoolean(split_query[17]);
+            System.out.println("Use Materialization: " + useMaterialization);
             if (useMaterialization) {
                 runSubPathQueryWithMaterialization(nodes_name, edges_name, start_val, end_val,value_field, target_node_op, start_node_op);
             } else {
@@ -200,7 +201,6 @@ public class GraphParser {
     private OpIterator runSubPathQueryWithMaterialization(String nodes, String edges, Field start_node_value, Field target_node_value,
                                 int value_field, Predicate.Op target_node_op, Predicate.Op start_node_op
     ){
-        try {
             TransactionId tid = new TransactionId();
 
             int node_table_id = Database.getCatalog().getTableId(nodes);
@@ -214,7 +214,8 @@ public class GraphParser {
             args.add(target_node_value.toString());
             args.add(nodes);
             args.add(edges);
-            args.add(value_field);            
+            args.add(value_field);
+            args.add(true);            
 
             String mv_query = String.format(subpath_query,args.toArray());
             Tuple mv_table = Database.getCatalog().get_mv(mv_query);
@@ -224,7 +225,6 @@ public class GraphParser {
             int path_num = 0;
             String table_name = "";
             if (mv_table != null) {
-                System.out.println("Table exists");
                 table_name = mv_table.getField(0).toString();
                 start_pg_no = ((IntField)mv_table.getField(2)).getValue();
                 start_tup_no = ((IntField)mv_table.getField(3)).getValue()+1;
@@ -233,33 +233,23 @@ public class GraphParser {
 
             SeqScan node_iterator = new SeqScan(tid, node_table_id, "");
             SeqScan edge_iterator = new SeqScan(tid, edge_table_id, "", start_pg_no);
-    
-            SubPaths subpaths = new SubPaths(node_iterator, edge_iterator, start_node_value, target_node_value, value_field, target_node_op, start_node_op, start_tup_no);
-            
+            System.out.println("Start Page Number in GraphPArser, " + start_pg_no);
+            SubPaths subpaths = new SubPaths(node_iterator, edge_iterator, start_node_value, target_node_value, value_field, target_node_op, start_node_op, start_tup_no, start_pg_no);
+
             int latest_pg = subpaths.getLastPageNumber();
             int latest_tup = subpaths.getLastTupleNumber();
             int next_path_num = subpaths.getLatestPathIndex();
             
             if (mv_table != null) {
-                mv.add_mv_subpaths(table_name, subpaths, next_path_num);
+                mv.add_new_mvsubpaths(table_name, subpaths, mv_query, latest_pg, latest_tup, path_num);
             } else {
-                table_name = mv.create_new_mvsubpaths(subpaths, mv_query, latest_pg, latest_tup, next_path_num);
+                table_name = mv.create_new_mvsubpaths(subpaths, mv_query, latest_pg, latest_tup, path_num);
             }
             int mv_finaltable_id = Database.getCatalog().getTableId(table_name);
             SeqScan ss_mv_table = new SeqScan(new TransactionId(), mv_finaltable_id, "");
-            ss_mv_table.open();
-            while(ss_mv_table.hasNext()) {
-                Tuple tt = ss_mv_table.next();
-            }
-            ss_mv_table.rewind();
+
             return ss_mv_table;
 
-        } catch(DbException e) {
-            e.printStackTrace();
-        } catch(TransactionAbortedException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
     private OpIterator runSubPathQuery(String nodes, String edges, Field start_node_value, Field target_node_value,
                                 int value_field, Predicate.Op target_node_op, Predicate.Op start_node_op

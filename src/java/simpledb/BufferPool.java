@@ -201,6 +201,14 @@ public class BufferPool {
 		}
 	}
 
+	public void updateTuple(TransactionId tid, int tableId, Tuple t) 
+			throws DbException, IOException, TransactionAbortedException {
+		HeapFile f = (HeapFile) Database.getCatalog().getDatabaseFile(tableId);
+		Page p = f.updateTuple(tid, t);
+		p.markDirty(true, tid);
+		pages.put(p.getId(), p);
+	}
+
 	/**
 	 * Remove the specified tuple from the buffer pool. Will acquire a write
 	 * lock on the page the tuple is removed from and any other pages that are

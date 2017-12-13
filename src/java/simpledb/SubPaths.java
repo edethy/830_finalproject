@@ -33,7 +33,8 @@ public class SubPaths extends Operator {
     private int last_tupno = 0;
     private int latest_path_index = 0;
 
-    private int start_tup_no = 0;
+    private int start_tup_no;
+    private int start_pg_no;
 
     private HashMap<Field,Tuple> node_tuples = new HashMap<Field, Tuple>();
 
@@ -41,6 +42,7 @@ public class SubPaths extends Operator {
     private int last_pending_tupno = 0;
 
     private int path_index = 0;
+
 
     public SubPaths(OpIterator nodes, OpIterator edges, Field start_node_value, 
                     Field target_node_value, int value_field,
@@ -55,13 +57,16 @@ public class SubPaths extends Operator {
         this.start_node_op = start_node_op;
         load_nodes_into_mem();        
         this.tuple_path_list =  createTupleList();
+        this.start_pg_no = 0;
+        this.start_tup_no = 0;
     }
 
     public SubPaths(OpIterator nodes, OpIterator edges, Field start_node_value, 
                     Field target_node_value, int value_field,
                     Predicate.Op target_node_op, Predicate.Op start_node_op,
-                    int start_tup_no
+                    int start_tup_no, int start_pg_no
     ){
+        System.out.println("Correct Constructor");
         this.nodes = nodes;
         this.edges = edges;
         this.start_node_value = start_node_value;
@@ -69,9 +74,12 @@ public class SubPaths extends Operator {
         this.value_field = value_field;
         this.target_node_op = target_node_op;
         this.start_node_op = start_node_op;
+        this.start_tup_no = start_tup_no;
+        this.start_pg_no = start_pg_no;
         load_nodes_into_mem();        
         this.tuple_path_list =  createTupleList();
-        this.start_tup_no = start_tup_no;
+
+        System.out.println("Consturment: " + start_tup_no + " Pg NO: " + start_pg_no);
     }
 
     public int getLastPageNumber() {
@@ -115,6 +123,7 @@ public class SubPaths extends Operator {
                     set_tuple_paths.add(p.get(i));
                 }
             }
+            System.out.println("Tuple List with Materialization:" + set_tuple_paths);
             return set_tuple_paths;
         } catch (DbException e) {
             e.printStackTrace();
@@ -125,7 +134,6 @@ public class SubPaths extends Operator {
     }
 
     private HashSet<ArrayList<Tuple>> generateSubPaths() throws DbException, TransactionAbortedException {
-        // System.out.println("Nodes in memory: " + node_tuples);
         HashSet<Field>  pending_start_nodes = new HashSet<Field>();
         HashMap<Field, ArrayList<Tuple>> pending_paths = new HashMap<Field,ArrayList<Tuple>>();
         HashSet<ArrayList<Tuple>> paths = new HashSet<ArrayList<Tuple>>();
@@ -134,7 +142,12 @@ public class SubPaths extends Operator {
         Tuple edge = null;
         while (edges.hasNext()) {
             edge = edges.next();
-            if (edge.getRecordId().getTupleNumber() < start_tup_no) {
+            // System.out.println("Edge Pg Number: " + edge.getRecordId().getPageId().getPageNumber());
+            // System.out.println("Edge Tup Number; " + edge.getRecordId().getTupleNumber());
+            // System.out.println("Start tup number; " + start_tup_no);
+            // System.out.println("Start pg number: " + start_pg_no);
+            if (edge.getRecordId().getTupleNumber() < start_tup_no && (edge.getRecordId().getPageId().getPageNumber() == start_pg_no)) {
+                // System.out.println("Ignoring Edge");
                 continue;
             }
             Field start_node = edge.getField(start_node_field_index);
@@ -145,7 +158,6 @@ public class SubPaths extends Operator {
                 continue;
             }
             Tuple node = node_tuples.get(start_node);
-            // System.out.println("Tuple Node: " + node + " Start Node: " + start_node);
             Field node_field = node.getField(value_field);
 
             for (ArrayList<Tuple> p : pending_paths.values()) {
@@ -200,6 +212,8 @@ public class SubPaths extends Operator {
     private ArrayList<Tuple> createPathTupleList(ArrayList<Tuple> p) {
         ArrayList<Tuple> new_tuple = new ArrayList<Tuple>();
         for (int i=0;i<p.size();i++) {
+            // System.out.println("Adding tuple with record id: " + p.get(i).getRecordId().getTupleNumber());
+            // System.out.println("Tuple has Page number: " + p.get(i).getRecordId().getPageId().getPageNumber());
             Tuple t = new Tuple(td);
             t.setField(0, new IntField(path_index));
             t.setField(1, new IntField(i));

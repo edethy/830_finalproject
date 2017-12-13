@@ -135,6 +135,7 @@ public class TableStats {
         	}
         	for (int i=0;i<int_fields.size();i++) {
                 int[] minmax_map = field_minmax_map.get(int_fields.get(i));
+                if (minmax_map == null) { continue; }
                 if (minmax_map[1]-minmax_map[0] == 0) 
                 int_field_hist_map.put(int_fields.get(i), new IntHistogram(1, minmax_map[0], minmax_map[1]));
                 else int_field_hist_map.put(int_fields.get(i), new IntHistogram(Math.min(NUM_HIST_BINS, minmax_map[1]-minmax_map[0]), minmax_map[0], minmax_map[1]));
