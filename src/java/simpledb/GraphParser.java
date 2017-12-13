@@ -233,7 +233,6 @@ public class GraphParser {
 
             SeqScan node_iterator = new SeqScan(tid, node_table_id, "");
             SeqScan edge_iterator = new SeqScan(tid, edge_table_id, "", start_pg_no);
-            System.out.println("Start Page Number in GraphPArser, " + start_pg_no);
             SubPaths subpaths = new SubPaths(node_iterator, edge_iterator, start_node_value, target_node_value, value_field, target_node_op, start_node_op, start_tup_no, start_pg_no);
 
             int latest_pg = subpaths.getLastPageNumber();
@@ -247,7 +246,6 @@ public class GraphParser {
             }
             int mv_finaltable_id = Database.getCatalog().getTableId(table_name);
             SeqScan ss_mv_table = new SeqScan(new TransactionId(), mv_finaltable_id, "");
-
             return ss_mv_table;
 
     }

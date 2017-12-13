@@ -66,7 +66,7 @@ public class SubPaths extends Operator {
                     Predicate.Op target_node_op, Predicate.Op start_node_op,
                     int start_tup_no, int start_pg_no
     ){
-        System.out.println("Correct Constructor");
+        // System.out.println("Correct Constructor");
         this.nodes = nodes;
         this.edges = edges;
         this.start_node_value = start_node_value;
@@ -79,7 +79,7 @@ public class SubPaths extends Operator {
         load_nodes_into_mem();        
         this.tuple_path_list =  createTupleList();
 
-        System.out.println("Consturment: " + start_tup_no + " Pg NO: " + start_pg_no);
+        // System.out.println("Consturment: " + start_tup_no + " Pg NO: " + start_pg_no);
     }
 
     public int getLastPageNumber() {
@@ -89,7 +89,7 @@ public class SubPaths extends Operator {
         return last_tupno;
     }
     public int getLatestPathIndex() {
-        return latest_path_index;
+        return path_index;
     }
 
     /**ublic int 
@@ -123,7 +123,7 @@ public class SubPaths extends Operator {
                     set_tuple_paths.add(p.get(i));
                 }
             }
-            System.out.println("Tuple List with Materialization:" + set_tuple_paths);
+            // System.out.println("Tuple List with Materialization:" + set_tuple_paths);
             return set_tuple_paths;
         } catch (DbException e) {
             e.printStackTrace();
@@ -146,10 +146,13 @@ public class SubPaths extends Operator {
             // System.out.println("Edge Tup Number; " + edge.getRecordId().getTupleNumber());
             // System.out.println("Start tup number; " + start_tup_no);
             // System.out.println("Start pg number: " + start_pg_no);
-            if (edge.getRecordId().getTupleNumber() < start_tup_no && (edge.getRecordId().getPageId().getPageNumber() == start_pg_no)) {
-                // System.out.println("Ignoring Edge");
-                continue;
+            if (!(start_pg_no == 0 && start_tup_no == 0)) {
+                if (edge.getRecordId().getTupleNumber() < start_tup_no && (edge.getRecordId().getPageId().getPageNumber() == start_pg_no)) {
+                    // System.out.println("Ignoring Edge");
+                    continue;
+                }
             }
+
             Field start_node = edge.getField(start_node_field_index);
 
             if (start_node.equals(new IntField(-1))) {
@@ -191,7 +194,6 @@ public class SubPaths extends Operator {
             int edge_pgno = edge.getRecordId().getPageId().getPageNumber();
             last_pgno = edge_pgno;
             last_tupno = edge.getRecordId().getTupleNumber();
-            System.out.println("Last Edge Page Number: " + edge_pgno + " Last Tuple Number: " + last_tupno);
             System.out.println("Num Paths: " + path_index);
         }
 

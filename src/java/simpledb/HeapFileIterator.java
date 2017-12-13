@@ -40,7 +40,7 @@ public class HeapFileIterator implements DbFileIterator {
 	public void open() throws DbException, TransactionAbortedException {
 		HeapPageId pid = new HeapPageId(tableid, start_pgno);
 		HeapPage page = (HeapPage)(Database.getBufferPool().getPage(this.tid, pid, Permissions.READ_ONLY));
-		System.out.println("HeapFileIterator starting on page; " + page.getId().getPageNumber());
+		// System.out.println("HeapFileIterator starting on page; " + page.getId().getPageNumber());
 		current_iterator = page.iterator();		
     	current_page = page;
 	}	

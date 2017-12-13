@@ -61,11 +61,15 @@ public class MaterializeView  {
         try {
             int tableid = Database.getCatalog().getTableId(file_name);
             int new_num_paths = num_paths;
-            p.open();
+            p.rewind();
             while(p.hasNext()) {
                 Tuple t = p.next();
+                // System.out.println("Inserting tuple" + t);
                 int current_path_no = ((IntField)t.getField(0)).getValue();
-                int new_num_p = current_path_no + num_paths + 1;
+                int new_num_p = current_path_no + num_paths;
+                if (num_paths != 0) {
+                    new_num_p++;
+                }
                 t.setField(0, new IntField(new_num_p));
                 bp.insertTuple(tid, tableid, t);
                 if (new_num_p > new_num_paths) {

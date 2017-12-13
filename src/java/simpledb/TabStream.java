@@ -165,7 +165,7 @@ public class TabStream {
 
         // Receive a query request from visualization. 
         GraphParser gp = new GraphParser();
-        gp.processQuery(cmd);
+        // gp.processQuery(cmd);
 
         while(true) {}
     }
