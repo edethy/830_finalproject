@@ -126,8 +126,9 @@ public class DFSJoin extends Operator {
     @SuppressWarnings("unchecked")
     private HashSet<ArrayList<Field>> getPaths(Tuple s_node, ArrayList<Field> path_so_far, OpIterator edges, OpIterator nodes) 
     throws DbException, TransactionAbortedException {
-        // edges.rewind();
-        // nodes.rewind();
+
+        edges.rewind();
+        nodes.rewind();
 
         HashSet<ArrayList<Field>> paths_from_node = new HashSet<ArrayList<Field>>();
         
@@ -148,12 +149,16 @@ public class DFSJoin extends Operator {
             Filter edges_to_follow = new Filter(p, edges);
             edges_to_follow.open();
             int count=0;
-            while(edges_to_follow.hasNext() && count < 10) {
+            HashSet<Field> nodes_considered = new HashSet<Field>();            
+            while(edges_to_follow.hasNext()) {
                 count++;
                 ArrayList<Field> path = (ArrayList<Field>)path_so_far.clone();
                 Tuple next_edge = edges_to_follow.next();
                 System.out.println("Next Edge: " + next_edge);
                 Field next_node_id_field = next_edge.getField(target_node_join_field);
+                if (nodes_considered.contains(next_node_id_field)) {
+                    continue;
+                }
                 Predicate p2 = new Predicate(node_pk_field, Predicate.Op.EQUALS, next_node_id_field);
                 Filter get_next_node_iterator = new Filter(p2, nodes);
                 get_next_node_iterator.open();
@@ -167,6 +172,7 @@ public class DFSJoin extends Operator {
                 if (next_node != null) {
                     System.out.println("Path: " + path);
                     HashSet<ArrayList<Field>> new_paths = getPaths(next_node, path, edges, nodes);
+                    nodes_considered.add(next_node_id_field);
                     paths_from_node.addAll(new_paths);
                 }
             }

@@ -68,7 +68,7 @@ public class HeapPage implements Page {
     /** Retrieve the number of tuples on this page.
         @return the number of tuples on this page
     */
-    private int getNumTuples() {        
+    public int getNumTuples() {        
     	int tuple_size = this.td.getSize();
     	int num_tups = (int)Math.floor((BufferPool.getPageSize() * 8) / (tuple_size * 8 + 1));
     	return num_tups;
@@ -196,6 +196,7 @@ public class HeapPage implements Page {
             for (int j=0; j<td.numFields(); j++) {
                 Field f = tuples[i].getField(j);
                 try {
+                    // System.out.println("Field: " + j + " f: " + f);
                     f.serialize(dos);
                 
                 } catch (IOException e) {

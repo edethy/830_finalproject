@@ -29,6 +29,12 @@ public class SubPaths extends Operator {
     private Predicate.Op target_node_op;
     private Predicate.Op start_node_op;
 
+    private int last_pgno = 0;
+    private int last_tupno = 0;
+    private int latest_path_index = 0;
+
+    private int start_tup_no = 0;
+
     private HashMap<Field,Tuple> node_tuples = new HashMap<Field, Tuple>();
 
     public SubPaths(OpIterator nodes, OpIterator edges, Field start_node_value, 
@@ -42,10 +48,38 @@ public class SubPaths extends Operator {
         this.value_field = value_field;
         this.target_node_op = target_node_op;
         this.start_node_op = start_node_op;
+        load_nodes_into_mem();        
         this.tuple_path_list =  createTupleList();
     }
 
-    /**
+    public SubPaths(OpIterator nodes, OpIterator edges, Field start_node_value, 
+                    Field target_node_value, int value_field,
+                    Predicate.Op target_node_op, Predicate.Op start_node_op,
+                    int start_tup_no
+    ){
+        this.nodes = nodes;
+        this.edges = edges;
+        this.start_node_value = start_node_value;
+        this.target_node_value = target_node_value;
+        this.value_field = value_field;
+        this.target_node_op = target_node_op;
+        this.start_node_op = start_node_op;
+        load_nodes_into_mem();        
+        this.tuple_path_list =  createTupleList();
+        this.start_tup_no = start_tup_no;
+    }
+
+    public int getLastPageNumber() {
+        return last_pgno;
+    }
+    public int getLastTupleNumber() {
+        return last_tupno;
+    }
+    public int getLatestPathIndex() {
+        return latest_path_index;
+    }
+
+    /**ublic int 
      * @see simpledb.TupleDesc#merge(TupleDesc, TupleDesc) for possible
      *      implementation logic.
      */
@@ -55,7 +89,7 @@ public class SubPaths extends Operator {
     
     private void load_nodes_into_mem() {
         try {
-            nodes.open();
+            nodes.rewind();
             while (nodes.hasNext()) {
                 Tuple n = nodes.next();
                 node_tuples.put(n.getField(node_pk_field), n);
@@ -65,7 +99,6 @@ public class SubPaths extends Operator {
         } catch (TransactionAbortedException e) {
             e.printStackTrace();
         }
-
     }
 
     private ArrayList<Tuple> createTupleList() {
@@ -79,10 +112,12 @@ public class SubPaths extends Operator {
                     t.setField(0, new IntField(path_index));
                     t.setField(1, new IntField(i));
                     t.setField(2, p.get(i).getField(node_pk_field));
+                    t.setField(3, new IntField(0));
                     set_tuple_paths.add(t);
                 }
                 path_index++;
             }
+            latest_path_index = path_index;
             return set_tuple_paths;
         } catch (DbException e) {
             e.printStackTrace();
@@ -93,8 +128,7 @@ public class SubPaths extends Operator {
     }
 
     private HashSet<ArrayList<Tuple>> generateSubPaths() throws DbException, TransactionAbortedException {
-        load_nodes_into_mem();
-        // System.out.println("Node Tuples in Memory:\n" + node_tuples);
+        // System.out.println("Nodes in memory: " + node_tuples);
         HashSet<Field>  pending_start_nodes = new HashSet<Field>();
         HashMap<Field, ArrayList<Tuple>> pending_paths = new HashMap<Field,ArrayList<Tuple>>();
         HashSet<ArrayList<Tuple>> paths = new HashSet<ArrayList<Tuple>>();
@@ -103,6 +137,9 @@ public class SubPaths extends Operator {
         Tuple edge = null;
         while (edges.hasNext()) {
             edge = edges.next();
+            if (edge.getRecordId().getTupleNumber() < start_tup_no) {
+                continue;
+            }
             Field start_node = edge.getField(start_node_field_index);
 
             if (start_node.equals(new IntField(-1))) {
@@ -111,22 +148,16 @@ public class SubPaths extends Operator {
                 continue;
             }
             Tuple node = node_tuples.get(start_node);
+            // System.out.println("Tuple Node: " + node + " Start Node: " + start_node);
             Field node_field = node.getField(value_field);
-            // System.out.println("Edge: " + edge + 
-            //                     "\nStart node: " + start_node +
-            //                     "\nNode: " + node + 
-            //                     "\nNodeField: " + node_field                
-            // );
 
             for (ArrayList<Tuple> p : pending_paths.values()) {
                 p.add(node);
                 if (node_field.compare(target_node_op, target_node_value)) {
-                    System.out.println("We've reached a target node so adding to path");
                     paths.add(p);
                 }
             }
             if (pending_start_nodes.contains(start_node) || node_field.compare(start_node_op, start_node_value)) {
-                System.out.println("Starting new path for node: " + start_node);
                 ArrayList<Tuple> new_path = new ArrayList<Tuple>();
                 new_path.add(node);
                 pending_paths.put(start_node, new_path);
@@ -137,19 +168,20 @@ public class SubPaths extends Operator {
             }
         }
         if (edge != null) {
-            // So we had a last edge we need to consider target node
             Field last_node_key = edge.getField(target_node_field_index);
             Tuple last_node = node_tuples.get(last_node_key);
             Field node_field = last_node.getField(value_field);
-            // Check if matches end of anything
             if (node_field.compare(target_node_op, target_node_value)) {
                 for (ArrayList<Tuple> p : pending_paths.values()) {
                     p.add(last_node);
                     paths.add(p);
                 }
             }
+            int edge_pgno = edge.getRecordId().getPageId().getPageNumber();
+            last_pgno = edge_pgno;
+            last_tupno = edge.getRecordId().getTupleNumber();
+            System.out.println("Last Edge Page Number: " + edge_pgno + " Last Tuple Number: " + last_tupno);
         }
-        System.out.println("Paths: " + paths);
         return paths;
     }
 

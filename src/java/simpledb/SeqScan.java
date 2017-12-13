@@ -16,6 +16,7 @@ public class SeqScan implements OpIterator {
 	private TransactionId tid;
 	private HeapFile f;
     private int start_pgnum;
+    private int start_tupno;
     
 	private DbFileIterator current_iterator;
     
@@ -39,7 +40,9 @@ public class SeqScan implements OpIterator {
     	this.tableid = tableid;
     	this.tid = tid;
     	this.tableAlias = tableAlias;
-    	this.f = (HeapFile)(Database.getCatalog().getDatabaseFile(tableid));    	
+        this.f = (HeapFile)(Database.getCatalog().getDatabaseFile(tableid));
+        this.start_pgnum=0;    	
+        this.start_tupno=0;
     }
 
     public SeqScan(TransactionId tid, int tableid, String tableAlias, int start_page_num) {
@@ -91,7 +94,7 @@ public class SeqScan implements OpIterator {
     }
 
     public void open() throws DbException, TransactionAbortedException {
-    	current_iterator = f.iterator(tid);
+    	current_iterator = f.iterator(tid, this.start_pgnum);
     	current_iterator.open();
     }
 

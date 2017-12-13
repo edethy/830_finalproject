@@ -715,7 +715,9 @@ public class Parser {
     protected void start(String[] argv) throws IOException {
         // first add tables to database
         Database.getCatalog().loadSchema(argv[0]);
+        // Database.getCatalog().loadMaterializedViews();
         TableStats.computeStatistics();
+        MaterializeView mv  = new MaterializeView();        
 
         String queryFile = null;
 

@@ -98,7 +98,8 @@ public class HeapFile implements DbFile {
     // see DbFile.java for javadocs
     public void writePage(Page page) throws IOException {
     	RandomAccessFile raf = new RandomAccessFile(f, "rw");
-    	int offset = ((HeapPage)page).getId().getPageNumber() * BufferPool.getPageSize();
+        int offset = ((HeapPage)page).getId().getPageNumber() * BufferPool.getPageSize();
+        System.out.println("Trying to access offset: " + offset);
     	raf.seek(offset);
     	raf.write(page.getPageData());
     }
@@ -150,5 +151,9 @@ public class HeapFile implements DbFile {
     	return it;
     }
 
+    public DbFileIterator iterator(TransactionId tid, int start_pgno) {
+    	HeapFileIterator it = new HeapFileIterator(tid, getId(), start_pgno);
+    	return it;
+    }
 }
 
