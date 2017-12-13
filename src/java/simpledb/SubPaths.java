@@ -37,6 +37,11 @@ public class SubPaths extends Operator {
 
     private HashMap<Field,Tuple> node_tuples = new HashMap<Field, Tuple>();
 
+    private int last_pending_pgno = 0;
+    private int last_pending_tupno = 0;
+
+    private int path_index = 0;
+
     public SubPaths(OpIterator nodes, OpIterator edges, Field start_node_value, 
                     Field target_node_value, int value_field,
                     Predicate.Op target_node_op, Predicate.Op start_node_op
@@ -105,19 +110,11 @@ public class SubPaths extends Operator {
         try {
             HashSet<ArrayList<Tuple>> paths = generateSubPaths();
             ArrayList<Tuple> set_tuple_paths = new ArrayList<Tuple>();
-            int path_index = 0;
             for (ArrayList<Tuple> p : paths) {
                 for (int i=0; i<p.size(); i++) {
-                    Tuple t = new Tuple(td);
-                    t.setField(0, new IntField(path_index));
-                    t.setField(1, new IntField(i));
-                    t.setField(2, p.get(i).getField(node_pk_field));
-                    t.setField(3, new IntField(0));
-                    set_tuple_paths.add(t);
+                    set_tuple_paths.add(p.get(i));
                 }
-                path_index++;
             }
-            latest_path_index = path_index;
             return set_tuple_paths;
         } catch (DbException e) {
             e.printStackTrace();
@@ -154,7 +151,8 @@ public class SubPaths extends Operator {
             for (ArrayList<Tuple> p : pending_paths.values()) {
                 p.add(node);
                 if (node_field.compare(target_node_op, target_node_value)) {
-                    paths.add(p);
+                    ArrayList<Tuple> path_tuple = createPathTupleList(p);
+                    paths.add(path_tuple);
                 }
             }
             if (pending_start_nodes.contains(start_node) || node_field.compare(start_node_op, start_node_value)) {
@@ -174,15 +172,43 @@ public class SubPaths extends Operator {
             if (node_field.compare(target_node_op, target_node_value)) {
                 for (ArrayList<Tuple> p : pending_paths.values()) {
                     p.add(last_node);
-                    paths.add(p);
+                    ArrayList<Tuple> path_tuple = createPathTupleList(p);
+                    paths.add(path_tuple);
                 }
             }
             int edge_pgno = edge.getRecordId().getPageId().getPageNumber();
             last_pgno = edge_pgno;
             last_tupno = edge.getRecordId().getTupleNumber();
             System.out.println("Last Edge Page Number: " + edge_pgno + " Last Tuple Number: " + last_tupno);
+            System.out.println("Num Paths: " + path_index);
         }
+
+        int last_page = 0;
+        int ll = 0;
+        for (Field f : pending_start_nodes) {
+            Tuple pending_tup = node_tuples.get(f);
+            if (pending_tup.getRecordId().getPageId().getPageNumber() >= last_page && pending_tup.getRecordId().getTupleNumber() >= last_tupno) {
+                last_page = pending_tup.getRecordId().getPageId().getPageNumber();
+                ll = pending_tup.getRecordId().getTupleNumber();
+            }
+        }
+        last_pending_pgno = last_page;
+        last_pending_tupno = ll;
         return paths;
+    }
+
+    private ArrayList<Tuple> createPathTupleList(ArrayList<Tuple> p) {
+        ArrayList<Tuple> new_tuple = new ArrayList<Tuple>();
+        for (int i=0;i<p.size();i++) {
+            Tuple t = new Tuple(td);
+            t.setField(0, new IntField(path_index));
+            t.setField(1, new IntField(i));
+            t.setField(2, p.get(i).getField(node_pk_field));
+            t.setField(3, new IntField(0));
+            new_tuple.add(t);
+        }
+        path_index++;
+        return new_tuple;
     }
 
     public void open() throws DbException, NoSuchElementException,
